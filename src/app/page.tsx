@@ -123,7 +123,7 @@ export default function Home() {
               prefetch={false}
               className="collection-card"
               href={'/collections?collection=' + c.slug}
-              key={c.id}
+              key={c.slug}
             >
               <div className="collection-image">
                 <Image
