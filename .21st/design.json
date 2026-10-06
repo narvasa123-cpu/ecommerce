@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "project": {
+    "name": "ORVEN",
+    "productType": "Leather goods concept e-commerce",
+    "stack": ["Next.js App Router", "TypeScript", "Tailwind CSS", "Prisma SQLite"]
+  },
+  "sources": {
+    "tokens": ["src/app/globals.css"],
+    "components": ["src/components"],
+    "assets": ["public/images/manifest.json", "public/wordmark.svg"],
+    "instructions": []
+  },
+  "design": {
+    "colorMode": "light",
+    "colors": {
+      "ivory": "#F6F1E9",
+      "stone": "#D9D0C3",
+      "taupe": "#8C7F72",
+      "espresso": "#3B2A22",
+      "ink": "#151311",
+      "brass": "#A8895B"
+    },
+    "typography": {
+      "display": "Cormorant Garamond",
+      "body": "Manrope"
+    },
+    "spacing": {
+      "maxWidth": 1360,
+      "section": "72–128px fluid"
+    },
+    "radius": {
+      "default": 0
+    },
+    "shadows": {
+      "default": "none"
+    },
+    "motion": {
+      "duration": 300,
+      "reducedMotion": true
+    },
+    "density": "generous"
+  },
+  "components": {
+    "installed": [],
+    "preferredPrimitives": [],
+    "patterns": []
+  },
+  "constraints": {
+    "must": [],
+    "avoid": []
+  },
+  "decisions": [
+    "Original ORVEN identity and editorial split hero; ivory and espresso tokens; AI concept imagery explicitly disclosed.",
+    "Admin uses a dedicated espresso sidebar, compact Manrope typography, warm neutral panels, status badges, URL-driven searchable paginated records, and structured product/fulfillment editors. Storefront keeps its editorial layout."
+  ],
+  "evidence": [
+    "User brief in attached Pasted text.txt",
+    "21st catalog access unavailable; built project-native React components."
+  ],
+  "generatedAt": "2026-10-02T14:11:17.548Z"
+}

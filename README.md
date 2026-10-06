@@ -1,0 +1,124 @@
+# ORVEN
+
+A complete local e-commerce concept for considered leather goods. Built with Next.js App Router, TypeScript, Tailwind CSS, Prisma/SQLite, Zod, bcrypt sessions, and Stripe **test mode only**. The identity, catalogue, copy and imagery are original fictional concepts.
+
+## Run locally
+
+Requires Node.js 22.13+ (verified with Node 24) and npm. In PowerShell:
+
+```powershell
+npm install
+Copy-Item .env.example .env
+npm run setup
+npm run dev
+```
+
+Open http://localhost:3000. `setup` generates the Prisma client, initializes the local SQLite file, applies the committed migration, and seeds data. Seeding is repeatable and preserves existing records. Production build: `npm run build`, then `npm start`. Set `APP_URL` to the exact origin you use; same-origin request validation deliberately rejects other origins.
+
+## Development logins
+
+| Role     | Email               | Password         |
+| -------- | ------------------- | ---------------- |
+| Admin    | admin@orven.test    | Atelier2026!demo |
+| Customer | customer@orven.test | Orven2026!demo   |
+
+Sign in at `/account`; administrators land at `/admin`. These credentials are development-only. Set `SEED_ADMIN_PASSWORD` and `SEED_CUSTOMER_PASSWORD` before first seeding a different environment. Changing the seed variables does not silently overwrite existing users' passwords.
+
+Seed includes 3 collections, 21 products, 42 variants, low-stock/sold-out/made-to-order examples, 3 historical orders and `WELCOME10` (10%, $200 minimum) / `ATELIER25` ($25, $300 minimum). Promotion thresholds are before discount; complimentary standard delivery is from $250 after discount.
+
+## What works
+
+- Responsive editorial home, original SVG wordmark, collection search/filter/sort/pagination stored in the URL, product gallery with native modal zoom and arrow-key navigation, colours/sizes, stock labels, related pieces.
+- Persistent anonymous cart, accessible drawer and full bag page, quantity changes and promotion entry. All totals come from the server in integer USD cents.
+- Guest/account checkout, saved destinations, standard/express delivery, review/progress, private confirmation/tracking link, order history.
+- Registration, sign-in/out, hashed passwords, expiring database sessions, profile/address management and one-use password reset links. Development reset and order emails are logged to the server console.
+- Admin product/variant/image/SEO editing, collection editing, inventory adjustments with reasons, order fulfillment/tracking/notes, customer names and records, promotions, newsletter count, support inbox, audit history and truthful 30-day metrics.
+- Persisted newsletter signups and support messages; service pages, legal templates, metadata, Open Graph, product JSON-LD, sitemap and robots.
+- Server role checks on every admin page and mutation; CSRF tokens and origin checks; database-backed auth/promo rate limiting; input validation; HttpOnly/SameSite cookies, Secure on production HTTPS; security headers.
+
+## Payments and inventory
+
+Default `PAYMENT_MODE=sandbox` works without credentials. The final action is labeled **Place sandbox order**. It reserves stock and records a simulated payment; no card fields, charge or actual shipment exists.
+
+For Stripe test checkout, set:
+
+```dotenv
+PAYMENT_MODE="stripe"
+STRIPE_SECRET_KEY="sk_test_..."
+STRIPE_WEBHOOK_SECRET="whsec_..."
+APP_URL="http://localhost:3000"
+```
+
+Forward test webhooks with the Stripe CLI:
+
+```powershell
+stripe listen --forward-to localhost:3000/api/stripe/webhook
+```
+
+Use the listener's signing secret. Subscribe to `checkout.session.completed`, `checkout.session.expired`, `checkout.session.async_payment_succeeded`, and `checkout.session.async_payment_failed`. Only verified provider-confirmed, USD, non-live, paid events mark Stripe orders paid. The return URL alone cannot do so. The order page has a refresh action for pending status. Only `sk_test_` keys are accepted.
+
+Checkout re-fetches product prices and promotion rules. Inventory decrement, usage reservation, order/items/payment creation and audit log occur in one transaction; insufficient stock rolls everything back. The unique idempotency key returns the original order on retries; a bag cannot have two simultaneous pending checkouts. Payment confirmation is idempotent. Failures, cancellations and expiry restore stock and promotion usage once.
+
+Reservations last 31 minutes and Stripe sessions expire at 30 minutes. Stripe state is reconciled before timed release; if verification is unavailable, stock stays held for safety. Configure a scheduler to POST `/api/cron` every minute with `Authorization: Bearer <CRON_SECRET>` for timely cleanup. Cart access and new checkout also release expired reservations. Canceling a Stripe reservation expires its provider session first. An interrupted checkout is recoverable from the bag: view the pending order, resume its Stripe test session, or cancel and start again.
+
+See [Stripe's webhook guidance](https://docs.stripe.com/webhooks) and [fulfillment guidance](https://docs.stripe.com/checkout/fulfillment) for external setup.
+
+## Administration
+
+Admin update verified on 6 October 2026: 24 unit/integration tests and all eight new desktop/mobile admin browser scenarios passed; the ten storefront browser scenarios also passed. Build, lint, TypeScript and formatting checks passed. See [admin verification and screenshots](artifacts/admin-verification.md).
+
+The admin at `/admin` has a dedicated sidebar, current-section navigation, mobile navigation, and an order search. The dashboard reports real database records for 7, 30 or 90 days, including paid order value, orders, average paid order value, new customer accounts, a daily sales chart with accessible values, and fulfillment/low-stock queues. All transaction data remains sandbox or Stripe test-mode data.
+
+Lists use server-side search, relevant status filters, URL state and 12-record pagination. Products and orders also support sorting. Orders, products and inventory have filtered CSV exports across pages (up to 10,000 records); export endpoints require an administrator session, disable caching, and neutralize spreadsheet formula cells. Customer messages have a dedicated Inbox; activity records identify known administrators by name.
+
+Product prices, fixed discounts and minimum spends are entered in **USD dollars**, then converted to integer cents for server storage. Percentage discounts use whole percent. Promotion expiry is explicitly **UTC** to avoid device-timezone drift.
+
+The product editor has image selection/reordering and named fields for SKUs, colour swatches, sizes and made-to-order variants. Copy owned files into `public/images` to expand the local media library. Remote URLs and arbitrary filesystem paths are rejected; browser uploading is not implemented. New variants start with zero stock; existing variants remain to protect historical references. New products start unpublished. Archive products by clearing the Published checkbox.
+
+Inventory adjustments use a dialog with a before/after quantity preview and required reason. Quantities exclude reservations, and adjustments retain an audit trail. Order details include items, full totals, customer and shipping information, provider payment state and a timeline. Fulfillment only offers valid forward transitions and requires a carrier/tracking number for shipped or delivered orders. Internal notes are persisted; unpaid orders cannot be fulfilled.
+
+## Design and image replacement
+
+Tokens are defined in `src/app/globals.css`. Ivory, stone, taupe, espresso, near-black and restrained brass; Cormorant Garamond display / Manrope UI; local Latin WOFF2 fonts with swap; fluid spacing and reduced-motion support.
+
+All five WebP assets in `public/images` were created using the built-in image generation tool. `public/images/manifest.json` records the prompts and replacement contract. Product photographs are representative **AI concept placeholders**, reused across related sample products; there are no actual product photos or manufacturing claims. Replace the files at their stable paths in one step, then update alt text, accurate variants and verified product data. Campaign copy and product pages explicitly disclose the concept nature.
+
+The 21st design context lives in `.21st`. Catalog search was attempted but authentication was unavailable; no 21st catalog component was copied. The interface uses project-native React components and Lucide icons. `21st review` was run; token declarations were informational findings and intentional search autofocus was the only warning.
+
+## Checks
+
+```powershell
+npm run format:check
+npm run lint
+npm run typecheck
+npm run test
+npx playwright install chromium
+npm run test:e2e
+npm run build
+```
+
+If Chrome is already installed, `$env:PLAYWRIGHT_CHANNEL="chrome"` runs the automated browser suite with it. Unit/integration tests use **prisma/test.db**, separate from the local catalogue. Browser tests use the development database and place sample orders, so stock decreases as it would in normal use. Desktop/mobile preview screenshots are saved to `artifacts/`. Checks cover cent-based pricing/tax/shipping/promotions, transactional reservations and release, payment idempotency, admin authorization/CSRF, collection filters, gallery keys, responsive layout, automated WCAG checks, and browse → bag → sandbox checkout → confirmation.
+
+## Assumptions and launch requirements
+
+Final verification (4 October 2026): 21 unit/integration tests and all 10 desktop/mobile browser tests passed. The 360px storefront has no horizontal overflow, and automated WCAG 2 A/AA and 2.2 AA checks found no violations on home/product pages. Production build, lint, TypeScript and formatting checks passed. The full npm audit reports five high-severity development-only findings through Next's ESLint plugin and its glob dependencies, all rooted in [the unpatched braces advisory](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm). Do not feed untrusted glob patterns into development tooling. npm's suggested forced downgrade of the Next lint configuration was not applied; production dependencies are checked separately with `npm audit --omit=dev`.
+
+The production-only audit (`npm audit --omit=dev`) reports zero vulnerabilities.
+
+Mobile Lighthouse against the local production build:
+
+| Page    | Performance | Accessibility | Best practices | SEO | LCP  | CLS |
+| ------- | ----------- | ------------- | -------------- | --- | ---- | --- |
+| Home    | 86          | 100           | 100            | 100 | 2.2s | 0   |
+| Product | 76          | 100           | 100            | 100 | 1.9s | 0   |
+
+The performance target of 90 is **not met in this measurement**. Main-thread blocking remains the limiting factor (490ms home, 1,040ms product). Scores depend on the test environment; further profiling and reducing hydration work are required before claiming that target. Full reports and refreshed desktop/360px screenshots are in `artifacts/`; see [verification details](artifacts/verification.md).
+
+- Brand: ORVEN; category: leather bags and small goods; quiet contemporary design; USD $145–$610 sample range; design-conscious adults; ship-to US, FR, DE, NL and IE.
+- SQLite and a custom bcrypt/database-session implementation replace hosted PostgreSQL and Auth.js to make local setup independent of external services. They retain server-side authorization and session revocation. For multi-instance hosting, migrate the Prisma schema/migrations and database to PostgreSQL and use shared storage; SQLite requires a persistent local disk and is not suitable for ephemeral serverless deployment.
+- Shipping and tax are **demonstration rules**, not real tax advice or compliant jurisdiction calculations. Integrate a verified tax/duty provider before real commerce.
+- Emails use the expressly allowed console development mailer. Add a transactional email provider and durable outbox before launch; do not use reset URLs in production logs. Newsletter sending and unsubscribe are not implemented, and no marketing is sent.
+- Stripe integration is implemented but requires the operator's test credentials/webhook configuration to test against the external provider. Live payments are intentionally unsupported.
+- Legal pages are marked templates. Real merchandise, accurate product photography, validated origin/craft claims, company information, shipping/returns/refunds processes and legal review are needed before public sales.
+- Sandbox order links are high-entropy bearer URLs; keep them private. Logged-in users also have account order history. Admin lists are paginated and exports are bounded. Bulk actions, browser media uploading, role management, automated refund processing and outbound support replies are not implemented.
+- Automated accessibility checks and keyboard/mobile smoke checks complement but do not establish full WCAG compliance. Lighthouse scores are environment-specific and recorded separately when measured.

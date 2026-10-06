@@ -1,0 +1,211 @@
+generator client {
+ provider = "prisma-client-js"
+}
+datasource db {
+ provider = "sqlite"
+ url = env("DATABASE_URL")
+}
+model User {
+ id String @id @default(cuid())
+ email String @unique
+ name String
+ passwordHash String
+ role String @default("CUSTOMER")
+ createdAt DateTime @default(now())
+ sessions Session[]
+ addresses Address[]
+ orders Order[]
+ resets PasswordReset[]
+}
+model Session {
+ id String @id
+ userId String
+ user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+ expiresAt DateTime
+}
+model PasswordReset {
+ id String @id
+ userId String
+ user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+ expiresAt DateTime
+}
+model Address {
+ id String @id @default(cuid())
+ userId String
+ user User @relation(fields:[userId],references:[id],onDelete:Cascade)
+ name String
+ line1 String
+ city String
+ region String
+ postalCode String
+ country String
+}
+model Collection {
+ id String @id @default(cuid())
+ slug String @unique
+ name String
+ description String
+ image String
+ products Product[]
+}
+model Product {
+ id String @id @default(cuid())
+ slug String @unique
+ name String
+ description String
+ material String
+ craftsmanship String
+ dimensions String
+ origin String
+ care String
+ category String
+ price Int
+ featured Boolean @default(false)
+ active Boolean @default(true)
+ seoTitle String @default("")
+ seoDescription String @default("")
+ collectionId String
+ collection Collection @relation(fields:[collectionId],references:[id])
+ images Image[]
+ variants Variant[]
+ createdAt DateTime @default(now())
+}
+model Image {
+ id String @id @default(cuid())
+ productId String
+ product Product @relation(fields:[productId],references:[id],onDelete:Cascade)
+ url String
+ alt String
+ position Int @default(0)
+}
+model Variant {
+ id String @id @default(cuid())
+ productId String
+ product Product @relation(fields:[productId],references:[id],onDelete:Cascade)
+ sku String @unique
+ color String
+ colorHex String
+ size String @default("One size")
+ madeToOrder Boolean @default(false)
+ inventory Inventory?
+ cartItems CartItem[]
+ movements StockMovement[]
+}
+model Inventory {
+ id String @id @default(cuid())
+ variantId String @unique
+ variant Variant @relation(fields:[variantId],references:[id],onDelete:Cascade)
+ quantity Int @default(0)
+}
+model StockMovement {
+ id String @id @default(cuid())
+ variantId String
+ variant Variant @relation(fields:[variantId],references:[id])
+ delta Int
+ reason String
+ createdAt DateTime @default(now())
+}
+model Cart {
+ id String @id
+ items CartItem[]
+ promotionCode String?
+ updatedAt DateTime @updatedAt
+}
+model CartItem {
+ id String @id @default(cuid())
+ cartId String
+ cart Cart @relation(fields:[cartId],references:[id],onDelete:Cascade)
+ variantId String
+ variant Variant @relation(fields:[variantId],references:[id])
+ quantity Int
+ @@unique([cartId,variantId])
+}
+model Order {
+ id String @id @default(cuid())
+ number String @unique
+ idempotencyKey String @unique
+ accessToken String @unique
+ cartId String
+ userId String?
+ user User? @relation(fields:[userId],references:[id])
+ email String
+ shippingAddress String
+ delivery String
+ status String @default("PENDING")
+ subtotal Int
+ discount Int
+ shipping Int
+ tax Int
+ total Int
+ promotionCode String?
+ reservationExpiresAt DateTime?
+ createdAt DateTime @default(now())
+ items OrderItem[]
+ payment Payment?
+ shipment Shipment?
+ notes String @default("")
+}
+model OrderItem {
+ id String @id @default(cuid())
+ orderId String
+ order Order @relation(fields:[orderId],references:[id],onDelete:Cascade)
+ variantId String
+ name String
+ variant String
+ image String
+ unitPrice Int
+ quantity Int
+}
+model Payment {
+ id String @id @default(cuid())
+ orderId String @unique
+ order Order @relation(fields:[orderId],references:[id])
+ provider String
+ providerId String? @unique
+ status String @default("PENDING")
+ amount Int
+}
+model Promotion {
+ id String @id @default(cuid())
+ code String @unique
+ kind String
+ value Int
+ minimum Int @default(0)
+ expiresAt DateTime
+ usageLimit Int
+ uses Int @default(0)
+ active Boolean @default(true)
+}
+model Shipment {
+ id String @id @default(cuid())
+ orderId String @unique
+ order Order @relation(fields:[orderId],references:[id])
+ carrier String
+ trackingNumber String
+ createdAt DateTime @default(now())
+}
+model AuditLog {
+ id String @id @default(cuid())
+ actorId String
+ action String
+ entityId String
+ detail String
+ createdAt DateTime @default(now())
+}
+model Newsletter {
+ id String @id @default(cuid())
+ email String @unique
+ createdAt DateTime @default(now())
+}
+model SupportMessage {
+ id String @id @default(cuid())
+ name String
+ email String
+ message String
+ createdAt DateTime @default(now())
+}
+model RateLimit {
+ id String @id
+ count Int
+ resetAt DateTime
+}

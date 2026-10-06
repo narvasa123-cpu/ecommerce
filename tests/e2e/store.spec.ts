@@ -1,0 +1,139 @@
+import { test, expect } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
+import { mkdirSync } from 'node:fs';
+test('responsive storefront, navigation and accessibility', async ({ page }, testInfo) => {
+  await page.goto('/');
+  await page.evaluate(() => document.fonts.ready);
+  await expect(page.getByRole('heading', { name: 'Less, but better.' })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+    page.viewportSize()!.width,
+  );
+  mkdirSync('artifacts', { recursive: true });
+  // Visit image positions so native lazy loading finishes before the full-page capture.
+  for (const img of await page.locator('main img').all()) await img.scrollIntoViewIfNeeded();
+  await expect
+    .poll(() =>
+      page
+        .locator('main img')
+        .evaluateAll((imgs) => imgs.every((img) => (img as HTMLImageElement).complete)),
+    )
+    .toBe(true);
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+  await page.screenshot({
+    path: 'artifacts/home-' + testInfo.project.name + '.png',
+    fullPage: true,
+  });
+  const audit = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag22aa'])
+    .analyze();
+  expect(audit.violations).toEqual([]);
+  if (testInfo.project.name === 'mobile') {
+    await page.getByRole('button', { name: 'Open navigation', exact: true }).click();
+    await expect(page.getByRole('dialog', { name: 'ORVEN' })).toBeVisible();
+    await page.getByRole('dialog').getByRole('link', { name: 'Our story' }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Good things take consideration.' }),
+    ).toBeVisible();
+  }
+  await page.goto('/products/the-forma-tote');
+  const productAudit = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag22aa'])
+    .analyze();
+  expect(productAudit.violations).toEqual([]);
+  await page.screenshot({
+    path: 'artifacts/product-' + testInfo.project.name + '.png',
+    fullPage: true,
+  });
+});
+test('browse → add to bag → sandbox checkout → confirmation', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: 'Less, but better.' })).toBeVisible();
+  await page.getByRole('link', { name: 'Discover the collection' }).click();
+  await page
+    .getByRole('heading', { name: 'The Forma Tote', exact: true })
+    .getByRole('link')
+    .click();
+  await page.getByRole('button', { name: 'Add to bag', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: /Your bag/ })).toBeVisible();
+  await page.getByRole('dialog').getByRole('link', { name: 'Continue to checkout' }).click();
+  await page
+    .getByRole('main')
+    .getByLabel('Email address', { exact: true })
+    .fill('smoke@example.test');
+  await page.getByRole('main').getByLabel('Full name', { exact: true }).fill('Sample Buyer');
+  await page.getByRole('main').getByLabel('Street address').fill('12 Fictional Lane');
+  await page.getByRole('main').getByLabel('City', { exact: true }).fill('New York');
+  await page.getByRole('main').getByLabel('State / region').fill('NY');
+  await page.getByRole('main').getByLabel('Postal code').fill('10001');
+  await page.getByRole('button', { name: 'Review your order' }).click();
+  await page.getByRole('checkbox').check();
+  await page.getByRole('button', { name: 'Place sandbox order' }).click();
+  await expect(page.getByRole('heading', { name: 'Thoughtfully chosen.' })).toBeVisible();
+  await expect(page.getByText('Simulated order.', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Open bag, 0 items' })).toBeVisible();
+});
+test('collection filters are shareable and keyboard gallery works', async ({ page }) => {
+  await page.goto('/collections?category=Totes&sort=price-desc');
+  await expect(page.getByRole('combobox', { name: 'Category', exact: true })).toHaveValue('Totes');
+  await page.getByRole('heading', { name: 'The Tall Tote', exact: true }).getByRole('link').click();
+  await page.getByRole('button', { name: 'Zoom product image' }).click();
+  await page.keyboard.press('ArrowRight');
+  await expect(page.getByRole('dialog').getByText('2 / 2')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).not.toBeVisible();
+});
+test('admin APIs require role and CSRF checks', async ({ request }) => {
+  const noCsrf = await request.post('/api/store/admin/inventory', {
+    data: { variantId: 'x', delta: 1, reason: 'Test adjustment' },
+  });
+  expect(noCsrf.status()).toBe(403);
+  const csrf = await request.get('/api/csrf');
+  const { token } = await csrf.json();
+  const forbidden = await request.post('/api/store/admin/inventory', {
+    headers: {
+      origin: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
+      'x-csrf-token': token,
+    },
+    data: { variantId: 'x', delta: 1, reason: 'Test adjustment' },
+  });
+  expect(forbidden.status()).toBe(403);
+});
+test('seeded account access and protected atelier tools', async ({ page }) => {
+  await page.goto('/account');
+  await page
+    .getByRole('main')
+    .getByLabel('Email address', { exact: true })
+    .fill('customer@orven.test');
+  await page
+    .getByRole('main')
+    .getByLabel(/^Password/)
+    .fill('Orven2026!demo');
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Welcome back, Alex.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your pieces, in progress.' })).toBeVisible();
+  await page.getByRole('button', { name: 'Sign out', exact: true }).click();
+  await page
+    .getByRole('main')
+    .getByLabel('Email address', { exact: true })
+    .fill('admin@orven.test');
+  await page
+    .getByRole('main')
+    .getByLabel(/^Password/)
+    .fill('Atelier2026!demo');
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Overview', exact: true })).toBeVisible();
+  if (await page.getByRole('button', { name: 'Open admin navigation' }).isVisible())
+    await page.getByRole('button', { name: 'Open admin navigation' }).click();
+  await page
+    .getByRole('navigation', { name: /^(Administration|Mobile administration)$/ })
+    .getByRole('link', { name: 'Promotions', exact: true })
+    .click();
+  await expect(page.getByText('WELCOME10', { exact: true })).toBeVisible();
+  if (await page.getByRole('button', { name: 'Open admin navigation' }).isVisible())
+    await page.getByRole('button', { name: 'Open admin navigation' }).click();
+  await page
+    .getByRole('navigation', { name: /^(Administration|Mobile administration)$/ })
+    .getByRole('link', { name: 'Products', exact: true })
+    .click();
+  await expect(page.getByRole('heading', { name: 'Products', exact: true })).toBeVisible();
+});
