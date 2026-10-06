@@ -52,7 +52,8 @@
   },
   "decisions": [
     "Original ORVEN identity and editorial split hero; ivory and espresso tokens; AI concept imagery explicitly disclosed.",
-    "Admin uses a dedicated espresso sidebar, compact Manrope typography, warm neutral panels, status badges, URL-driven searchable paginated records, and structured product/fulfillment editors. Storefront keeps its editorial layout."
+    "Admin uses a dedicated espresso sidebar, compact Manrope typography, warm neutral panels, status badges, URL-driven searchable paginated records, and structured product/fulfillment editors. Storefront keeps its editorial layout.",
+    "Customer account uses an espresso welcome banner, compact icon-led summaries, a profile sidebar with section shortcuts, framed order and address panels, and an illustrated empty-order state. Keep account styles scoped to customer-account and preserve existing server-backed profile, address, and order flows."
   ],
   "evidence": [
     "User brief in attached Pasted text.txt",

@@ -196,20 +196,26 @@ export function Logout() {
 export function RemoveAddress({ id }: { id: string }) {
   const router = useRouter();
   const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
   return (
     <>
       <button
         className="underlink"
+        disabled={busy}
         onClick={async () => {
+          setBusy(true);
+          setError('');
           try {
             await api('account/address', { id, remove: true });
             router.refresh();
           } catch (e) {
             setError((e as Error).message);
+          } finally {
+            setBusy(false);
           }
         }}
       >
-        Remove address
+        {busy ? 'Removing address…' : 'Remove address'}
       </button>
       {error && (
         <p className="form-error" role="alert">
