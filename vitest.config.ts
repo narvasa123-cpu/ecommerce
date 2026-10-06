@@ -7,7 +7,10 @@ export default defineConfig({
     include: ['tests/**/*.test.ts'],
     fileParallelism: false,
     env: {
-      DATABASE_URL: 'file:./test.db',
+      DATABASE_URL:
+        process.env.TEST_DATABASE_URL || 'postgresql://postgres@127.0.0.1:55432/orven_test',
+      DIRECT_URL:
+        process.env.TEST_DATABASE_URL || 'postgresql://postgres@127.0.0.1:55432/orven_test',
       PAYMENT_MODE: 'sandbox',
       APP_URL: 'http://localhost:3000',
     },

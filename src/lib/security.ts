@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { randomBytes, createHash, timingSafeEqual } from 'node:crypto';
 import { db } from './db';
+import { transactionLock } from './transaction-lock';
 export class HttpError extends Error {
   constructor(
     message: string,
@@ -69,6 +70,7 @@ export async function csrfGuard(request: Request) {
 }
 export async function rateLimit(key: string, limit = 10, windowMs = 60000) {
   await db.$transaction(async (tx) => {
+    await transactionLock(tx, `rate:${key}`);
     const now = new Date();
     const row = await tx.rateLimit.findUnique({ where: { id: key } });
     if (!row || row.resetAt < now) {

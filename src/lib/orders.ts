@@ -3,6 +3,7 @@ import { priceOrder } from './pricing';
 import { HttpError, token, appUrl } from './security';
 import Stripe from 'stripe';
 import type { Prisma } from '@prisma/client';
+import { transactionLock } from './transaction-lock';
 export const sandboxMode = () => process.env.PAYMENT_MODE !== 'stripe';
 export function stripeClient() {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -14,6 +15,7 @@ export function stripeClient() {
   return new Stripe(key);
 }
 async function release(tx: Prisma.TransactionClient, id: string, reason: string) {
+  await transactionLock(tx, `order:${id}`);
   const order = await tx.order.findUnique({ where: { id }, include: { items: true } });
   if (!order || order.status !== 'PENDING') return;
   await tx.order.update({
@@ -114,6 +116,7 @@ export async function reserveOrder(input: {
 }) {
   await releaseExpired();
   return db.$transaction(async (tx) => {
+    await transactionLock(tx, `cart:${input.cartId}`);
     const existing = await tx.order.findUnique({
       where: { idempotencyKey: input.key },
       include: { payment: true, items: true },
@@ -234,6 +237,7 @@ export async function confirmPayment(
   provider: 'sandbox' | 'stripe',
 ) {
   const result = await db.$transaction(async (tx) => {
+    await transactionLock(tx, `order:${id}`);
     const order = await tx.order.findUnique({ where: { id }, include: { payment: true } });
     if (!order) throw new HttpError('Order not found.', 404);
     if (order.payment?.provider !== provider || order.total !== amount)

@@ -11,3 +11,6 @@ playwright-report/
 tsconfig.tsbuildinfo
 dev.log
 *.log
+.dev.vars*
+.wrangler/
+.open-next/

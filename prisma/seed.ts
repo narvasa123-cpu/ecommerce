@@ -1,7 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import { db } from '../src/lib/db';
 import { hash } from 'bcryptjs';
 import { randomUUID } from 'node:crypto';
-const db = new PrismaClient();
 async function main() {
   if (
     process.env.NODE_ENV === 'production' &&

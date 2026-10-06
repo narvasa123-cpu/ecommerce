@@ -1,19 +1,29 @@
 # ORVEN
 
-A complete local e-commerce concept for considered leather goods. Built with Next.js App Router, TypeScript, Tailwind CSS, Prisma/SQLite, Zod, bcrypt sessions, and Stripe **test mode only**. The identity, catalogue, copy and imagery are original fictional concepts.
+A complete local e-commerce concept for considered leather goods. Built with Next.js App Router, TypeScript, Tailwind CSS, Prisma/PostgreSQL (Supabase), Zod, bcrypt sessions, and Stripe **test mode only**. The identity, catalogue, copy and imagery are original fictional concepts.
 
 ## Run locally
 
-Requires Node.js 22.13+ (verified with Node 24) and npm. In PowerShell:
+Requires Node.js 22.13+ (Node 24 for the optional SQLite import), npm, and a PostgreSQL database. Copy `.env.example` to `.env`, then set `DATABASE_URL` and `DIRECT_URL` from Supabase **Connect > Session pooler**, using port 5432 and a URL-encoded database password. Keep both variables server-only. In PowerShell:
 
 ```powershell
 npm install
-Copy-Item .env.example .env
+# Configure .env as described above before setup.
 npm run setup
 npm run dev
 ```
 
-Open http://localhost:3000. `setup` generates the Prisma client, initializes the local SQLite file, applies the committed migration, and seeds data. Seeding is repeatable and preserves existing records. Production build: `npm run build`, then `npm start`. Set `APP_URL` to the exact origin you use; same-origin request validation deliberately rejects other origins.
+Open http://localhost:3000. `setup` generates the PostgreSQL Prisma client, applies the committed migration, and seeds data. The app uses the JavaScript PostgreSQL adapter, with a small server connection pool. Supabase hosts storage; the existing bcrypt sessions and server-side role checks remain in use. Seeding is repeatable and preserves existing records. Production build: `npm run build`, then `npm start`. Set `APP_URL` to the exact origin you use; same-origin request validation deliberately rejects other origins.
+
+## Supabase migration
+
+The PostgreSQL conversion passed 28 unit/integration tests, all 18 desktop/mobile browser tests, and the production build on 6 October 2026. Hosted Supabase migration and Cloudflare deployment are pending account connection. See [migration verification](artifacts/supabase-verification.md).
+
+The PostgreSQL initial migration is in `prisma/migrations/20261006000000_supabase`. The former SQLite SQL is archived in `prisma/legacy-sqlite` and is never applied to PostgreSQL. Application tables have row-level security enabled without browser policies: only the trusted server database role may access store records. Use the project database owner or an appropriate dedicated server role; never expose a database password through `NEXT_PUBLIC_` variables or client code. Supabase Auth and browser Data API access are not used.
+
+For an existing SQLite catalogue, point `DATABASE_URL` and `DIRECT_URL` at a new empty PostgreSQL destination, run `npm run db:generate` and `npm run db:migrate`, then run `npm run db:import-sqlite` **instead of seeding**. The script reads `prisma/dev.db` without modifying it, preserves IDs, converts timestamps and booleans, and imports every application table in one transaction. It refuses a populated destination. A different SQLite source path can be passed after `--`. Verify the transfer before changing the running site's connection. Schema migration and this data transfer are separate operations.
+
+PostgreSQL checkout, cancellation, payment confirmation and rate-limit operations use transaction-scoped advisory locks to retain idempotency under concurrent requests. Inventory and promotion decrements also use conditional atomic updates. Integration tests exercise concurrent checkout retries, competing carts, cancellation replay and payment replay.
 
 ## Development logins
 
@@ -97,7 +107,7 @@ npm run test:e2e
 npm run build
 ```
 
-If Chrome is already installed, `$env:PLAYWRIGHT_CHANNEL="chrome"` runs the automated browser suite with it. Unit/integration tests use **prisma/test.db**, separate from the local catalogue. Browser tests use the development database and place sample orders, so stock decreases as it would in normal use. Desktop/mobile preview screenshots are saved to `artifacts/`. Checks cover cent-based pricing/tax/shipping/promotions, transactional reservations and release, payment idempotency, admin authorization/CSRF, collection filters, gallery keys, responsive layout, automated WCAG checks, and browse → bag → sandbox checkout → confirmation.
+If Chrome is already installed, `$env:PLAYWRIGHT_CHANNEL="chrome"` runs the automated browser suite with it. Unit/integration tests require a separate PostgreSQL database through `TEST_DATABASE_URL` (default `postgresql://postgres@127.0.0.1:55432/orven_test`). The database name must end in `_test`; tests clear test records and must never point at the catalogue. Browser tests use the development database and place sample orders, so stock decreases as it would in normal use. Desktop/mobile preview screenshots are saved to `artifacts/`. Checks cover cent-based pricing/tax/shipping/promotions, transactional reservations and release, payment idempotency, admin authorization/CSRF, collection filters, gallery keys, responsive layout, automated WCAG checks, and browse → bag → sandbox checkout → confirmation.
 
 ## Assumptions and launch requirements
 
@@ -115,7 +125,7 @@ Mobile Lighthouse against the local production build:
 The performance target of 90 is **not met in this measurement**. Main-thread blocking remains the limiting factor (490ms home, 1,040ms product). Scores depend on the test environment; further profiling and reducing hydration work are required before claiming that target. Full reports and refreshed desktop/360px screenshots are in `artifacts/`; see [verification details](artifacts/verification.md).
 
 - Brand: ORVEN; category: leather bags and small goods; quiet contemporary design; USD $145–$610 sample range; design-conscious adults; ship-to US, FR, DE, NL and IE.
-- SQLite and a custom bcrypt/database-session implementation replace hosted PostgreSQL and Auth.js to make local setup independent of external services. They retain server-side authorization and session revocation. For multi-instance hosting, migrate the Prisma schema/migrations and database to PostgreSQL and use shared storage; SQLite requires a persistent local disk and is not suitable for ephemeral serverless deployment.
+- Storage now targets Supabase PostgreSQL. The local SQLite database is retained only as a read-only import source; the app no longer writes to it. A custom bcrypt/database-session implementation provides server-side authorization and session revocation. Cloudflare deployment additionally requires its framework adapter, Hyperdrive database binding, runtime secrets and deployment validation.
 - Shipping and tax are **demonstration rules**, not real tax advice or compliant jurisdiction calculations. Integrate a verified tax/duty provider before real commerce.
 - Emails use the expressly allowed console development mailer. Add a transactional email provider and durable outbox before launch; do not use reset URLs in production logs. Newsletter sending and unsubscribe are not implemented, and no marketing is sent.
 - Stripe integration is implemented but requires the operator's test credentials/webhook configuration to test against the external provider. Live payments are intentionally unsupported.

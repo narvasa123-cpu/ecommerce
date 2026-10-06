@@ -1,7 +1,6 @@
 import { beforeAll, afterAll, beforeEach, describe, it, expect, vi } from 'vitest';
 import { execFileSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { writeFileSync } from 'node:fs';
 const jar = vi.hoisted(() => new Map<string, string>());
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 vi.mock('next/headers', () => ({
@@ -26,9 +25,11 @@ const address = {
 };
 let variantId: string;
 beforeAll(async () => {
-  writeFileSync('prisma/test.db', '', { flag: 'a' });
+  const testUrl = new URL(process.env.DATABASE_URL!);
+  if (!testUrl.pathname.endsWith('_test'))
+    throw new Error('Integration tests require a dedicated database whose name ends in _test.');
   execFileSync(process.execPath, ['node_modules/prisma/build/index.js', 'migrate', 'deploy'], {
-    env: { ...process.env, DATABASE_URL: 'file:./test.db' },
+    env: { ...process.env, DIRECT_URL: process.env.DATABASE_URL },
     stdio: 'pipe',
   });
   const c = await db.collection.upsert({
@@ -92,6 +93,41 @@ async function prepare(cartId = 'test-cart', quantity = 1) {
   return { cartId, key: randomUUID(), email: 'sample@example.test', address, delivery: 'standard' };
 }
 describe('Database checkout and stock reservations', () => {
+  it('serializes concurrent retries for the same checkout', async () => {
+    const input = await prepare();
+    const orders = await Promise.all([reserveOrder(input), reserveOrder(input)]);
+    expect(orders[0].id).toBe(orders[1].id);
+    expect(await db.order.count()).toBe(1);
+    expect((await db.inventory.findUniqueOrThrow({ where: { variantId } })).quantity).toBe(1);
+  });
+  it('does not oversell when two carts reserve the final stock concurrently', async () => {
+    const first = await prepare('concurrent-one', 2);
+    const second = await prepare('concurrent-two', 2);
+    const results = await Promise.allSettled([reserveOrder(first), reserveOrder(second)]);
+    expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+    expect(await db.order.count()).toBe(1);
+    expect((await db.inventory.findUniqueOrThrow({ where: { variantId } })).quantity).toBe(0);
+  });
+  it('restores stock once during concurrent cancellation requests', async () => {
+    const order = await reserveOrder(await prepare());
+    await Promise.all([
+      cancelOrder(order.id, 'First cancellation'),
+      cancelOrder(order.id, 'Replay'),
+    ]);
+    expect((await db.inventory.findUniqueOrThrow({ where: { variantId } })).quantity).toBe(2);
+    expect(await db.auditLog.count({ where: { action: 'RESERVATION_RELEASED' } })).toBe(1);
+  });
+  it('records payment once during concurrent confirmations', async () => {
+    const order = await reserveOrder(await prepare());
+    await Promise.all([
+      confirmPayment(order.id, 'sandbox-concurrent', order.total, 'sandbox'),
+      confirmPayment(order.id, 'sandbox-concurrent', order.total, 'sandbox'),
+    ]);
+    expect(await db.auditLog.count({ where: { action: 'ORDER_PAID' } })).toBe(1);
+    expect((await db.payment.findUniqueOrThrow({ where: { orderId: order.id } })).status).toBe(
+      'PAID',
+    );
+  });
   it('blocks anonymous and customer requests to record exports', async () => {
     const request = () =>
       exportRecords(new Request('http://localhost:3000/api/admin/export?section=orders'));
