@@ -176,7 +176,7 @@ a:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 36px;
+  gap: 18px;
   padding: 17px 26px;
   min-height: 52px;
   background: var(--espresso);
@@ -241,6 +241,9 @@ a:hover {
   padding: 0 var(--gutter);
   border-bottom: 1px solid var(--line);
   background: var(--ivory);
+  position: sticky;
+  top: 0;
+  z-index: 20;
 }
 .wordmark {
   width: 146px;
@@ -267,6 +270,9 @@ a:hover {
   transition: right var(--motion);
 }
 .desktop-nav a:hover::after {
+  right: 0;
+}
+.desktop-nav a[aria-current='page']::after {
   right: 0;
 }
 .header-tools {
@@ -457,6 +463,27 @@ a:hover {
 .product-picture img {
   object-fit: cover;
   transition: transform var(--motion);
+}
+.product-picture::after {
+  content: 'View piece';
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  padding: 7px 10px;
+  background: var(--ivory);
+  color: var(--espresso);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  opacity: 0;
+  transform: translateY(5px);
+  transition:
+    opacity var(--motion),
+    transform var(--motion);
+}
+.product-card:hover .product-picture::after,
+.product-card:focus-within .product-picture::after {
+  opacity: 1;
+  transform: translateY(0);
 }
 .product-card:hover .product-picture img {
   transform: scale(1.035);
@@ -754,6 +781,11 @@ a:hover {
   padding: 11px 12px;
   min-height: 44px;
   font-size: 12px;
+}
+.filters input:focus,
+.filters select:focus {
+  border-color: var(--espresso);
+  background: var(--surface);
 }
 .catalog-count {
   display: flex;
@@ -1131,6 +1163,8 @@ a:hover {
 .summary-box {
   background: var(--surface);
   padding: 30px;
+  position: sticky;
+  top: 124px;
 }
 .summary-box h2 {
   font-size: 32px;
@@ -1634,6 +1668,9 @@ td .underlink {
     padding: 0 15px;
     gap: 10px;
   }
+  .header .logo {
+    min-width: 0;
+  }
   .wordmark {
     width: 130px;
     height: 44px;
@@ -1664,7 +1701,8 @@ td .underlink {
     margin-bottom: 25px;
   }
   .hero h1 {
-    font-size: 98px;
+    font-size: clamp(66px, 18vw, 92px);
+    max-width: 5ch;
   }
   .hero-description {
     margin: 25px 0;
@@ -1812,6 +1850,9 @@ td .underlink {
   .filters select {
     font-size: 16px;
   }
+  .filters .button {
+    min-height: 48px;
+  }
   .catalog-tabs {
     gap: 20px;
   }
@@ -1849,6 +1890,7 @@ td .underlink {
   }
   .summary-box {
     padding: 25px;
+    position: static;
   }
   .account-grid {
     grid-template-columns: 1fr;
@@ -1917,12 +1959,16 @@ td .underlink {
     padding: 20px;
   }
   .bag-item {
-    grid-template-columns: 80px 1fr auto;
+    grid-template-columns: 80px minmax(0, 1fr);
     gap: 12px;
   }
   .bag-item img {
     width: 80px;
     height: 100px;
+  }
+  .bag-item > .text-button {
+    grid-column: 2;
+    justify-self: start;
   }
 }
 @media (max-width: 560px) {
@@ -1976,8 +2022,10 @@ td .underlink {
     gap: 12px;
     font-size: 7px;
   }
-  .account-icon {
-    display: none;
+  .header-tools .account-icon,
+  .header-tools .icon-button {
+    width: 36px;
+    padding: 8px;
   }
   .fields-row {
     grid-template-columns: 1fr;

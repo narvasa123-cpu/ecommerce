@@ -32,6 +32,11 @@ export function Header() {
   const menu = useRef<HTMLDialogElement>(null);
   const path = usePathname();
   const count = cart?.items.reduce((s, i) => s + i.quantity, 0) || 0;
+  const currentLink = (href: string) => {
+    if (href === '/story') return path === '/story';
+    if (href === '/collections') return path === '/collections' && !path.includes('/products/');
+    return false;
+  };
   return (
     <>
       <div className="announcement">
@@ -56,7 +61,7 @@ export function Header() {
               prefetch={false}
               key={name}
               href={href}
-              aria-current={path === '/story' && href === '/story' ? 'page' : undefined}
+              aria-current={currentLink(href) ? 'page' : undefined}
             >
               {name}
             </Link>

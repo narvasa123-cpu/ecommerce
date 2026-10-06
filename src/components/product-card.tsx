@@ -39,9 +39,15 @@ export function ProductCard({ product: p }: { product: CatalogProduct }) {
       <p className="small muted">
         {p.material} · {v?.color}
       </p>
-      <div className="swatches" aria-label="Available colours">
+      <div className="swatches" aria-label={'Available colours for ' + p.name}>
         {p.variants.map((v) => (
-          <span key={v.id} style={{ backgroundColor: v.colorHex }} title={v.color} />
+          <span
+            key={v.id}
+            style={{ backgroundColor: v.colorHex }}
+            title={v.color}
+            aria-label={v.color}
+            role="img"
+          />
         ))}
         <span className="stock-label">{availability(stock, v?.madeToOrder)}</span>
       </div>
