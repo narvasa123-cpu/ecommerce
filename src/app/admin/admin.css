@@ -427,6 +427,14 @@
 .a-chart {
   padding: 22px;
 }
+.a-analytics-panel > .a-chart-summary {
+  padding: 20px 22px 8px;
+}
+.a-analytics-panel > p.a-muted {
+  padding: 0 22px 20px;
+  line-height: 1.7;
+  margin-top: 8px;
+}
 .a-chart-summary {
   display: flex;
   align-items: baseline;

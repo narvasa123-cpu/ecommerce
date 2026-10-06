@@ -262,6 +262,16 @@ export async function POST(request: Request, context: Context) {
           }
           await tx.cart.update({ where: { id }, data: { promotionCode: code || null } });
         }
+        if (path === 'cart/item') {
+          await tx.auditLog.create({
+            data: {
+              actorId: 'storefront',
+              action: 'CART_ACTIVITY',
+              entityId: id,
+              detail: 'Cart selection updated',
+            },
+          });
+        }
       });
       return NextResponse.json(await getCart());
     }

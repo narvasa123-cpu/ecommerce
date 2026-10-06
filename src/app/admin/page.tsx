@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { db } from '@/lib/db';
 import { requireAdmin } from '@/lib/security';
 import { money } from '@/lib/pricing';
+import { cartAbandonment, salesBreakdowns } from '@/lib/analytics';
 import { dateLabel, type AdminParams } from '@/lib/admin';
 import { Badge, PageHeading, Panel } from '@/components/admin/ui';
 import {
@@ -24,7 +25,13 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   const [paid, count, customers, low, fulfillment, recent, activity] = await Promise.all([
     db.order.findMany({
       where: { createdAt: { gte: since }, payment: { status: 'PAID' } },
-      select: { total: true, createdAt: true },
+      select: {
+        total: true,
+        createdAt: true,
+        cartId: true,
+        shippingAddress: true,
+        items: { select: { variantId: true, name: true, unitPrice: true, quantity: true } },
+      },
     }),
     db.order.count({ where: { createdAt: { gte: since } } }),
     db.user.count({ where: { role: 'CUSTOMER', createdAt: { gte: since } } }),
@@ -37,8 +44,33 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       take: 5,
       include: { payment: true, _count: { select: { items: true } } },
     }),
-    db.auditLog.findMany({ orderBy: { createdAt: 'desc' }, take: 4 }),
+    db.auditLog.findMany({
+      where: { action: { not: 'CART_ACTIVITY' } },
+      orderBy: { createdAt: 'desc' },
+      take: 4,
+    }),
   ]);
+  const [variants, cartEvents, previousCustomers] = await Promise.all([
+    db.variant.findMany({
+      where: { id: { in: [...new Set(paid.flatMap((o) => o.items.map((i) => i.variantId)))] } },
+      select: { id: true, product: { select: { category: true } } },
+    }),
+    db.auditLog.findMany({
+      where: { action: 'CART_ACTIVITY', createdAt: { gte: since } },
+      select: { entityId: true, createdAt: true },
+    }),
+    db.user.count({
+      where: {
+        role: 'CUSTOMER',
+        createdAt: {
+          gte: new Date(since.getTime() - days * 86400000),
+          lt: since,
+        },
+      },
+    }),
+  ]);
+  const breakdown = salesBreakdowns(paid, new Map(variants.map((v) => [v.id, v.product.category])));
+  const abandonment = cartAbandonment(cartEvents, paid, new Date());
   const revenue = paid.reduce((sum, o) => sum + o.total, 0);
   const buckets = Array.from({ length: days }, (_, i) => {
     const date = new Date(since);
@@ -111,7 +143,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       </div>
       <div className="a-dashboard-grid">
         <Panel
-          title="Sales activity"
+          title="Revenue trends"
           aside={<span className="a-muted">Paid order value · USD</span>}
         >
           <div className="a-chart">
@@ -205,6 +237,155 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
               Create a promotion <ArrowUpRight size={15} aria-hidden="true" />
             </Link>
           </div>
+        </Panel>
+      </div>
+      <div className="a-dashboard-grid">
+        <Panel title="Sales performance" className="a-analytics-panel">
+          <div className="a-chart-summary">
+            <strong>{money(revenue)}</strong>
+            <span>
+              {paid.length} paid orders of {count} total orders
+            </span>
+          </div>
+          <p className="a-muted">
+            Paid order value includes discounts, delivery and estimated tax. Pending, failed and
+            cancelled payments are excluded.
+          </p>
+        </Panel>
+        <Panel title="Customer growth" className="a-analytics-panel">
+          <div className="a-chart-summary">
+            <strong>{customers} new accounts</strong>
+            <span>
+              {previousCustomers} in the previous {days}-day period
+            </span>
+          </div>
+          <p className="a-muted">
+            {customers - previousCustomers >= 0 ? '+' : ''}
+            {customers - previousCustomers} accounts compared with the previous period. Registered
+            customers only; guest orders do not create accounts.
+          </p>
+        </Panel>
+      </div>
+      <div className="a-dashboard-grid">
+        <Panel
+          title="Product performance"
+          className="a-analytics-panel"
+          aside={<span className="a-muted">Ranked by gross merchandise value</span>}
+        >
+          <div className="a-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Units sold</th>
+                  <th>Gross item value</th>
+                </tr>
+              </thead>
+              <tbody>
+                {breakdown.products.slice(0, 10).map((p) => (
+                  <tr key={p.name}>
+                    <td>{p.name}</td>
+                    <td>{p.units}</td>
+                    <td>{money(p.value)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {!breakdown.products.length && (
+            <p className="a-empty">No paid product sales in this period.</p>
+          )}
+          <p className="a-muted">
+            Historical item prices before order discounts, delivery and tax. Variants are grouped by
+            their saved product name.
+          </p>
+        </Panel>
+        <Panel title="Top categories" className="a-analytics-panel">
+          <div className="a-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th>Units sold</th>
+                  <th>Gross item value</th>
+                </tr>
+              </thead>
+              <tbody>
+                {breakdown.categories.map((c) => (
+                  <tr key={c.name}>
+                    <td>{c.name}</td>
+                    <td>{c.units}</td>
+                    <td>{money(c.value)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {!breakdown.categories.length && (
+            <p className="a-empty">No category sales in this period.</p>
+          )}
+          <p className="a-muted">
+            Paid order items grouped by current product category; ranked by gross item value.
+          </p>
+        </Panel>
+      </div>
+      <div className="a-dashboard-grid">
+        <Panel title="Cart abandonment rate" className="a-analytics-panel">
+          <div className="a-chart-summary">
+            <strong>
+              {abandonment.rate === null ? 'Awaiting data' : abandonment.rate.toFixed(1) + '%'}
+            </strong>
+            <span>
+              {abandonment.abandoned} abandoned / {abandonment.eligible} resolved carts
+            </span>
+          </div>
+          <p className="a-muted">
+            {abandonment.converted} converted · {abandonment.active} active · {abandonment.tracked}{' '}
+            tracked carts
+          </p>
+          <p className="a-muted">
+            Distinct carts updated in this reporting period. A cart is abandoned after 24 hours
+            without an update or a paid order after its first tracked update. Active carts are
+            excluded from the rate. Recovered carts count as converted. Tracking begins with this
+            release; older untracked carts are excluded.
+          </p>
+        </Panel>
+        <Panel
+          title="Customer location"
+          className="a-analytics-panel"
+          aside={<span className="a-muted">Paid orders by delivery country</span>}
+        >
+          <div className="a-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Country</th>
+                  <th>Paid orders</th>
+                  <th>Share</th>
+                </tr>
+              </thead>
+              <tbody>
+                {breakdown.locations.map((l) => (
+                  <tr key={l.name}>
+                    <td>
+                      {l.name === 'Unknown'
+                        ? l.name
+                        : new Intl.DisplayNames(['en'], { type: 'region' }).of(l.name)}
+                    </td>
+                    <td>{l.orders}</td>
+                    <td>{((l.orders / paid.length) * 100).toFixed(1)}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {!breakdown.locations.length && (
+            <p className="a-empty">No paid orders with location data in this period.</p>
+          )}
+          <p className="a-muted">
+            Order destination aggregates only; no street addresses. Guest and registered customer
+            orders are included.
+          </p>
         </Panel>
       </div>
       <div className="a-dashboard-grid">
