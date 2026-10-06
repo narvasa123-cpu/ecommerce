@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { compare, hash } from 'bcryptjs';
 import { z } from 'zod';
@@ -26,7 +25,6 @@ import {
   confirmPayment,
   stripeCheckout,
   cancelOrder,
-  releaseExpired,
   stripeClient,
 } from '@/lib/orders';
 const emailSchema = z.string().trim().toLowerCase().email().max(254);
@@ -98,7 +96,6 @@ export async function GET(request: Request, context: Context) {
   try {
     const path = (await context.params).path.join('/');
     if (path === 'cart') {
-      if (await releaseExpired()) revalidatePath('/');
       const u = new URL(request.url);
       return NextResponse.json(
         await getCart(
