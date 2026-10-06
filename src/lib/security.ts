@@ -13,6 +13,14 @@ export class HttpError extends Error {
 export const token = () => randomBytes(32).toString('hex');
 export const digest = (value: string) => createHash('sha256').update(value).digest('hex');
 export const appUrl = () => process.env.APP_URL || 'http://localhost:3000';
+function allowedOrigins() {
+  const origins = new Set([new URL(appUrl()).origin]);
+  for (const key of ['VERCEL_URL', 'VERCEL_PROJECT_PRODUCTION_URL', 'VERCEL_BRANCH_URL']) {
+    const value = process.env[key];
+    if (value) origins.add('https://' + value.replace(/^https?:\/\//, ''));
+  }
+  return origins;
+}
 export const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production' && appUrl().startsWith('https:'),
@@ -56,7 +64,7 @@ export async function cartId(create = false) {
 }
 export async function csrfGuard(request: Request) {
   const origin = request.headers.get('origin');
-  if (origin !== new URL(appUrl()).origin)
+  if (!origin || !allowedOrigins().has(origin))
     throw new HttpError('Request origin was not accepted. Reload the page and try again.', 403);
   const supplied = request.headers.get('x-csrf-token') || '';
   const expected = (await cookies()).get('orven_csrf')?.value || '';
