@@ -25,6 +25,14 @@ For an existing SQLite catalogue, point `DATABASE_URL` and `DIRECT_URL` at a new
 
 PostgreSQL checkout, cancellation, payment confirmation and rate-limit operations use transaction-scoped advisory locks to retain idempotency under concurrent requests. Inventory and promotion decrements also use conditional atomic updates. Integration tests exercise concurrent checkout retries, competing carts, cancellation replay and payment replay.
 
+## Cloudflare Workers
+
+The Worker uses OpenNext and the configured `HYPERDRIVE` binding for Supabase. Hyperdrive query caching is disabled so sessions, stock and orders are read consistently. Database clients are scoped to each Worker request; PostgreSQL transaction locks retain checkout/payment idempotency. The home page and sitemap read live data. Product media comes from the bundled image manifest. Cloudflare builds serve the supplied WebP assets directly.
+
+`npm run build:cloudflare` builds the Worker and removes copied private environment files from its output. The cleanup also checks generated files for known credential values and fails the build if any remain. Runtime `APP_URL`, `PAYMENT_MODE`, and `ORVEN_RUNTIME` are set in `wrangler.jsonc`; database credentials belong to the Hyperdrive configuration, never Worker assets or GitHub source. Public Supabase CA certificate files are intentionally committed.
+
+`npm run deploy:cloudflare` builds and publishes using your authenticated Cloudflare account. Linux builds are available through the manual **Build Cloudflare Worker** GitHub Actions workflow; OpenNext's Windows support is incomplete. The workflow builds without hosted database passwords. The `.env.supabase` file stores deployment login passwords locally and is excluded from GitHub. Payments remain sandbox-only.
+
 ## Development logins
 
 | Role     | Email               | Password         |
