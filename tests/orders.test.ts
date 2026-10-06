@@ -207,7 +207,7 @@ describe('Database checkout and stock reservations', () => {
       );
     const response = await request('checkout', { ...input, total: 1, subtotal: 1 });
     expect(response.status).toBe(200);
-    const { token } = await response.json();
+    const { token } = (await response.json()) as { token: string };
     const order = await db.order.findUniqueOrThrow({ where: { accessToken: token } });
     expect(order.total).toBe(32400);
     expect((await getCart()).pendingOrder?.token).toBe(token);

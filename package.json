@@ -5,6 +5,9 @@
   "scripts": {
     "dev": "next dev --hostname 0.0.0.0",
     "build": "next build",
+    "build:cloudflare": "node scripts/build-cloudflare.mjs",
+    "preview:cloudflare": "npm run build:cloudflare && wrangler dev",
+    "deploy:cloudflare": "npm run build:cloudflare && opennextjs-cloudflare deploy",
     "start": "next start --hostname 0.0.0.0",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
@@ -21,6 +24,7 @@
   "dependencies": {
     "@fontsource/cormorant-garamond": "^5.2.0",
     "@fontsource/manrope": "^5.2.0",
+    "@opennextjs/cloudflare": "^1.20.8",
     "@prisma/adapter-pg": "^6.19.3",
     "@prisma/client": "6.19.3",
     "bcryptjs": "^3.0.2",
@@ -48,7 +52,8 @@
     "tailwindcss": "^4.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.11",
+    "wrangler": "^4.147.0"
   },
   "overrides": {
     "deepmerge-ts": "^8.0.0"

@@ -8,7 +8,10 @@ async function signIn(request: APIRequestContext) {
       origin: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:3000',
       'x-csrf-token': token,
     },
-    data: { email: 'admin@orven.test', password: 'Atelier2026!demo' },
+    data: {
+      email: 'admin@orven.test',
+      password: process.env.DEPLOY_ADMIN_PASSWORD || 'Atelier2026!demo',
+    },
   });
   expect(response.status()).toBe(200);
 }

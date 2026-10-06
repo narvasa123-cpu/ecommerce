@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { readdir } from 'node:fs/promises';
-import path from 'node:path';
+import mediaManifest from '../../../../../public/images/manifest.json';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { requireAdmin } from '@/lib/security';
@@ -12,7 +11,8 @@ import { PageHeading, Panel, Badge } from '@/components/admin/ui';
 import { ProductEditor } from '@/components/admin/product-editor';
 import { FulfillmentForm, PromotionEditor } from '@/components/admin/editors';
 async function mediaLibrary() {
-  return (await readdir(path.join(process.cwd(), 'public/images')))
+  return mediaManifest.assets
+    .map((asset) => asset.path)
     .filter((f) => /^[a-zA-Z0-9_-]+\.(webp|png|jpg|svg)$/.test(f))
     .sort()
     .map((f) => '/images/' + f);

@@ -1,0 +1,27 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "orven-store",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-06",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS",
+  },
+  "vars": {
+    "PAYMENT_MODE": "sandbox",
+    "ORVEN_RUNTIME": "cloudflare",
+    "APP_URL": "https://orven-store.narvasadarryljohn.workers.dev",
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+  },
+  "workers_dev": true,
+  "hyperdrive": [
+    {
+      "binding": "HYPERDRIVE",
+      "id": "9cf7dc3e5ea3468ead47dcffe5ae9491",
+    },
+  ],
+}

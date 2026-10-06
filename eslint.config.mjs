@@ -4,6 +4,13 @@ import ts from 'eslint-config-next/typescript';
 export default defineConfig([
   ...next,
   ...ts,
-  globalIgnores(['.next/**', 'node_modules/**', 'next-env.d.ts']),
+  globalIgnores([
+    '.next/**',
+    '.open-next/**',
+    '.wrangler/**',
+    'cloudflare-env.d.ts',
+    'node_modules/**',
+    'next-env.d.ts',
+  ]),
   { rules: { 'react-hooks/set-state-in-effect': 'off' } },
 ]);

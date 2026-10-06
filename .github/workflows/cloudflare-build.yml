@@ -1,0 +1,32 @@
+name: Build Cloudflare Worker
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      DATABASE_URL: postgresql://postgres@127.0.0.1:5432/orven
+      DIRECT_URL: postgresql://postgres@127.0.0.1:5432/orven
+      APP_URL: https://orven-store.narvasadarryljohn.workers.dev
+      PAYMENT_MODE: sandbox
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run db:generate
+      - run: npm run build:cloudflare
+      - run: tar -czf orven-worker.tar.gz .open-next
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: orven-worker
+          path: orven-worker.tar.gz
+          retention-days: 3

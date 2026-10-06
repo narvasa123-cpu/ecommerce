@@ -107,7 +107,7 @@ test('seeded account access and protected atelier tools', async ({ page }) => {
   await page
     .getByRole('main')
     .getByLabel(/^Password/)
-    .fill('Orven2026!demo');
+    .fill(process.env.DEPLOY_CUSTOMER_PASSWORD || 'Orven2026!demo');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Welcome back, Alex.' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Your pieces, in progress.' })).toBeVisible();
@@ -119,7 +119,7 @@ test('seeded account access and protected atelier tools', async ({ page }) => {
   await page
     .getByRole('main')
     .getByLabel(/^Password/)
-    .fill('Atelier2026!demo');
+    .fill(process.env.DEPLOY_ADMIN_PASSWORD || 'Atelier2026!demo');
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Overview', exact: true })).toBeVisible();
   if (await page.getByRole('button', { name: 'Open admin navigation' }).isVisible())

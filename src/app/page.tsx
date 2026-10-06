@@ -4,7 +4,7 @@ import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { featuredProducts } from '@/lib/catalog';
 import { db } from '@/lib/db';
 import { ProductCard } from '@/components/product-card';
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
 export default async function Home() {
   const products = await featuredProducts();
   const collections = await db.collection.findMany();

@@ -17,7 +17,7 @@ Open http://localhost:3000. `setup` generates the PostgreSQL Prisma client, appl
 
 ## Supabase migration
 
-The PostgreSQL conversion passed 28 unit/integration tests, all 18 desktop/mobile browser tests, and the production build on 6 October 2026. Hosted Supabase migration and Cloudflare deployment are pending account connection. See [migration verification](artifacts/supabase-verification.md).
+The PostgreSQL conversion passed 28 unit/integration tests, all 18 desktop/mobile browser tests, and the production build on 6 October 2026. The hosted Supabase migration is complete and the imported table counts are verified. Demo passwords were replaced; hosted login passwords are saved only in the ignored `.env.supabase` file. See [migration verification](artifacts/supabase-verification.md).
 
 The PostgreSQL initial migration is in `prisma/migrations/20261006000000_supabase`. The former SQLite SQL is archived in `prisma/legacy-sqlite` and is never applied to PostgreSQL. Application tables have row-level security enabled without browser policies: only the trusted server database role may access store records. Use the project database owner or an appropriate dedicated server role; never expose a database password through `NEXT_PUBLIC_` variables or client code. Supabase Auth and browser Data API access are not used.
 
@@ -83,7 +83,7 @@ Lists use server-side search, relevant status filters, URL state and 12-record p
 
 Product prices, fixed discounts and minimum spends are entered in **USD dollars**, then converted to integer cents for server storage. Percentage discounts use whole percent. Promotion expiry is explicitly **UTC** to avoid device-timezone drift.
 
-The product editor has image selection/reordering and named fields for SKUs, colour swatches, sizes and made-to-order variants. Copy owned files into `public/images` to expand the local media library. Remote URLs and arbitrary filesystem paths are rejected; browser uploading is not implemented. New variants start with zero stock; existing variants remain to protect historical references. New products start unpublished. Archive products by clearing the Published checkbox.
+The product editor has image selection/reordering and named fields for SKUs, colour swatches, sizes and made-to-order variants. Copy owned files into `public/images` and add their filenames to `public/images/manifest.json` to expand the bundled media library, then rebuild. Remote URLs and arbitrary filesystem paths are rejected; browser uploading is not implemented. New variants start with zero stock; existing variants remain to protect historical references. New products start unpublished. Archive products by clearing the Published checkbox.
 
 Inventory adjustments use a dialog with a before/after quantity preview and required reason. Quantities exclude reservations, and adjustments retain an audit trail. Order details include items, full totals, customer and shipping information, provider payment state and a timeline. Fulfillment only offers valid forward transitions and requires a carrier/tracking number for shipped or delivered orders. Internal notes are persisted; unpaid orders cannot be fulfilled.
 
