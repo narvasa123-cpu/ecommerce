@@ -1,6 +1,6 @@
 # ORVEN
 
-A complete local e-commerce concept for considered leather goods. Built with Next.js App Router, TypeScript, Tailwind CSS, Prisma/PostgreSQL (Supabase), Zod, bcrypt sessions, and Stripe **test mode only**. The identity, catalogue, copy and imagery are original fictional concepts.
+A complete e-commerce concept for considered leather goods, hosted on Cloudflare Workers with Supabase PostgreSQL. Built with Next.js App Router, TypeScript, Tailwind CSS, Prisma, Zod, bcrypt sessions, and Stripe **test mode only**. The identity, catalogue, copy and imagery are original fictional concepts.
 
 ## Run locally
 
@@ -27,11 +27,15 @@ PostgreSQL checkout, cancellation, payment confirmation and rate-limit operation
 
 ## Cloudflare Workers
 
+Published storefront: https://orven-store.narvasadarryljohn.workers.dev. Sign in at `/account` using `admin@orven.test` and the `DEPLOY_ADMIN_PASSWORD` value saved in your ignored `.env.supabase` file, then open `/admin`. The development passwords below do not work on this deployment.
+
+The initial live checks passed, including admin dashboard, product export, price editing and inventory restoration. Continued checks hit Cloudflare's free-plan CPU ceiling: Worker logs report `exceededCpu` at 10 ms and requests return HTTP 503. Live checkout and the remaining browser tests are not yet verified. Enable Workers Paid in the account's Workers plan settings before resuming the full live suite. Workers Paid starts at $5/month, with usage charges above included limits; see [Cloudflare pricing](https://developers.cloudflare.com/workers/platform/pricing/) and [CPU limits](https://developers.cloudflare.com/workers/platform/limits/#cpu-time).
+
 The Worker uses OpenNext and the configured `HYPERDRIVE` binding for Supabase. Hyperdrive query caching is disabled so sessions, stock and orders are read consistently. Database clients are scoped to each Worker request; PostgreSQL transaction locks retain checkout/payment idempotency. The home page and sitemap read live data. Product media comes from the bundled image manifest. Cloudflare builds serve the supplied WebP assets directly.
 
-`npm run build:cloudflare` builds the Worker and removes copied private environment files from its output. The cleanup also checks generated files for known credential values and fails the build if any remain. Runtime `APP_URL`, `PAYMENT_MODE`, and `ORVEN_RUNTIME` are set in `wrangler.jsonc`; database credentials belong to the Hyperdrive configuration, never Worker assets or GitHub source. Public Supabase CA certificate files are intentionally committed.
+`npm run build:cloudflare` builds the Worker and removes copied private environment files from its output. The cleanup also checks generated files for known credential values and fails the build if any remain. It makes the Prisma WASM import relative so a Linux artifact can be deployed from another machine. Runtime `APP_URL`, `PAYMENT_MODE`, and `ORVEN_RUNTIME` are set in `wrangler.jsonc`; database credentials belong to the Hyperdrive configuration, never Worker assets or GitHub source. Public Supabase CA certificate files are intentionally committed.
 
-`npm run deploy:cloudflare` builds and publishes using your authenticated Cloudflare account. Linux builds are available through the manual **Build Cloudflare Worker** GitHub Actions workflow; OpenNext's Windows support is incomplete. The workflow builds without hosted database passwords. The `.env.supabase` file stores deployment login passwords locally and is excluded from GitHub. Payments remain sandbox-only.
+`npm run deploy:cloudflare` builds and publishes using your authenticated Cloudflare account. Linux builds are available through the manual **Build Cloudflare Worker** GitHub Actions workflow; OpenNext's Windows support is incomplete. The workflow builds without hosted database passwords. To deploy its downloaded artifact, extract `orven-worker.tar.gz` in the project root, run `node scripts/clean-cloudflare.mjs`, then `npx wrangler deploy`. The `.env.supabase` file stores deployment login passwords locally and is excluded from GitHub. Payments remain sandbox-only.
 
 ## Development logins
 
@@ -133,7 +137,7 @@ Mobile Lighthouse against the local production build:
 The performance target of 90 is **not met in this measurement**. Main-thread blocking remains the limiting factor (490ms home, 1,040ms product). Scores depend on the test environment; further profiling and reducing hydration work are required before claiming that target. Full reports and refreshed desktop/360px screenshots are in `artifacts/`; see [verification details](artifacts/verification.md).
 
 - Brand: ORVEN; category: leather bags and small goods; quiet contemporary design; USD $145–$610 sample range; design-conscious adults; ship-to US, FR, DE, NL and IE.
-- Storage now targets Supabase PostgreSQL. The local SQLite database is retained only as a read-only import source; the app no longer writes to it. A custom bcrypt/database-session implementation provides server-side authorization and session revocation. Cloudflare deployment additionally requires its framework adapter, Hyperdrive database binding, runtime secrets and deployment validation.
+- Storage now targets Supabase PostgreSQL through Cloudflare Hyperdrive. The local SQLite database is retained only as a read-only import source; the app no longer writes to it. A custom bcrypt/database-session implementation provides server-side authorization and session revocation. Cloudflare uses the OpenNext adapter and the configured Hyperdrive binding.
 - Shipping and tax are **demonstration rules**, not real tax advice or compliant jurisdiction calculations. Integrate a verified tax/duty provider before real commerce.
 - Emails use the expressly allowed console development mailer. Add a transactional email provider and durable outbox before launch; do not use reset URLs in production logs. Newsletter sending and unsubscribe are not implemented, and no marketing is sent.
 - Stripe integration is implemented but requires the operator's test credentials/webhook configuration to test against the external provider. Live payments are intentionally unsupported.

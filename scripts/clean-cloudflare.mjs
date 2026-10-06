@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync, readdirSync, unlinkSync, existsSync } from 'node:fs';
-import { join, resolve, sep, basename } from 'node:path';
+import { join, resolve, sep, basename, dirname } from 'node:path';
 import { parseEnv } from 'node:util';
 
 const buildRoot = resolve(process.argv[2] || '.open-next');
@@ -36,6 +36,19 @@ function inspect(dir) {
     else if (entry.isFile()) {
       if (entry.name === '.env' || entry.name.startsWith('.env.')) unlinkSync(file);
       else {
+        // OpenNext emits an absolute build-machine path for Prisma's WASM.
+        // Keep the artifact portable when it is downloaded from Linux CI.
+        if (
+          entry.name === 'handler.mjs' &&
+          existsSync(join(dirname(file), 'node_modules/.prisma/client/query_compiler_bg.wasm'))
+        ) {
+          const original = readFileSync(file, 'utf8');
+          const portable = original.replace(
+            /import\((["'])([^"']+query_compiler_bg\.wasm)\1\)/g,
+            'import("./node_modules/.prisma/client/query_compiler_bg.wasm")',
+          );
+          if (portable !== original) writeFileSync(file, portable);
+        }
         const bytes = readFileSync(file);
         if (secrets.some((secret) => bytes.includes(secret))) exposed.push(file);
       }
