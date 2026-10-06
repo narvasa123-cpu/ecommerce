@@ -160,7 +160,7 @@ export function ProductDetail({ product: p }: { product: CatalogProduct }) {
           </p>
         )}
         <p className="product-service">
-          Complimentary standard delivery from $250.
+          Complimentary standard delivery from ₱15,661.75.
           <br />
           30 days to decide.{' '}
           <Link className="underlink" href="/shipping">

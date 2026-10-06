@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { priceOrder } from '../src/lib/pricing';
+import {
+  priceOrder,
+  money,
+  phpAmount,
+  toPhpMinor,
+  fromPhpAmount,
+  conversionRounding,
+} from '../src/lib/pricing';
 const valid = {
   kind: 'PERCENT',
   value: 10,
@@ -10,6 +17,38 @@ const valid = {
   usageLimit: 10,
 };
 describe('Server pricing in integer cents', () => {
+  it('converts dollars to pesos rather than relabelling the amount', () => {
+    expect(toPhpMinor(20000)).toBe(1252940);
+    expect(phpAmount(48500)).toBe('30383.80');
+    expect(money(20000)).toBe('₱12,529.40');
+    expect(money(0)).toBe('₱0.00');
+    expect(phpAmount(1200)).toBe('751.76');
+  });
+  it('round-trips existing prices and fixed promotion amounts through PHP editors', () => {
+    for (const cents of [0, 1, 100, 1200, 2500, 20000, 28501, 48500, 10000000])
+      expect(fromPhpAmount(Number(phpAmount(cents)))).toBe(cents);
+  });
+  it('shows a rounding adjustment so converted components reconcile to the payment total', () => {
+    const totals = priceOrder([{ price: 28501, quantity: 1 }], 'PH');
+    expect(
+      toPhpMinor(totals.subtotal) -
+        toPhpMinor(totals.discount) +
+        toPhpMinor(totals.shipping) +
+        toPhpMinor(totals.tax) +
+        conversionRounding(totals),
+    ).toBe(toPhpMinor(totals.total));
+  });
+  it('supports Philippine delivery, demonstration tax and discounted free-shipping eligibility', () => {
+    expect(priceOrder([{ price: 25000, quantity: 1 }], 'PH', 'standard', valid)).toEqual({
+      subtotal: 25000,
+      discount: 2500,
+      shipping: 1200,
+      tax: 2700,
+      total: 26400,
+    });
+    expect(priceOrder([{ price: 25000, quantity: 1 }], 'PH').shipping).toBe(0);
+    expect(priceOrder([{ price: 25000, quantity: 1 }], 'PH', 'express').shipping).toBe(2500);
+  });
   it('computes the complete US standard total', () => {
     expect(priceOrder([{ price: 48500, quantity: 1 }])).toEqual({
       subtotal: 48500,

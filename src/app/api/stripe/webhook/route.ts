@@ -36,10 +36,11 @@ export async function POST(request: Request) {
         (event.type === 'checkout.session.completed' ||
           event.type === 'checkout.session.async_payment_succeeded') &&
         s.payment_status === 'paid' &&
-        s.currency === 'usd' &&
+        (s.currency === 'usd' || s.currency === 'php') &&
+        s.currency === (s.metadata?.settlementCurrency || 'usd') &&
         !event.livemode
       )
-        await confirmPayment(order.id, s.id, s.amount_total || 0, 'stripe');
+        await confirmPayment(order.id, s.id, s.amount_total || 0, 'stripe', s.currency);
       else if (
         ['checkout.session.expired', 'checkout.session.async_payment_failed'].includes(event.type)
       )

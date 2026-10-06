@@ -9,7 +9,7 @@ export function Footer() {
         <div>
           <PackageCheck strokeWidth={1.2} />
           <span>
-            Thoughtful delivery<small>Complimentary standard shipping from $250</small>
+            Thoughtful delivery<small>Complimentary standard shipping from ₱15,661.75</small>
           </span>
         </div>
         <div>

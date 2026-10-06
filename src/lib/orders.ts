@@ -1,5 +1,5 @@
 import { db } from './db';
-import { priceOrder } from './pricing';
+import { priceOrder, toPhpMinor } from './pricing';
 import { HttpError, token, appUrl } from './security';
 import Stripe from 'stripe';
 import type { Prisma } from '@prisma/client';
@@ -62,8 +62,14 @@ export async function releaseExpired() {
       const stripe = stripeClient();
       let session = await stripe.checkout.sessions.retrieve(o.payment.providerId);
       if (session.status === 'open') session = await stripe.checkout.sessions.expire(session.id);
-      if (session.payment_status === 'paid' && !session.livemode && session.currency === 'usd')
-        await confirmPayment(o.id, session.id, session.amount_total || 0, 'stripe');
+      const currency = session.metadata?.settlementCurrency || 'usd';
+      if (
+        session.payment_status === 'paid' &&
+        !session.livemode &&
+        (currency === 'usd' || currency === 'php') &&
+        session.currency === currency
+      )
+        await confirmPayment(o.id, session.id, session.amount_total || 0, 'stripe', currency);
       else if (session.status === 'expired') releasable.push(o.id);
     } catch (e) {
       console.error('Reservation reconciliation deferred; retaining stock', o.number, e);
@@ -235,12 +241,14 @@ export async function confirmPayment(
   providerId: string,
   amount: number,
   provider: 'sandbox' | 'stripe',
+  currency: 'usd' | 'php' = 'usd',
 ) {
   const result = await db.$transaction(async (tx) => {
     await transactionLock(tx, `order:${id}`);
     const order = await tx.order.findUnique({ where: { id }, include: { payment: true } });
     if (!order) throw new HttpError('Order not found.', 404);
-    if (order.payment?.provider !== provider || order.total !== amount)
+    const expectedAmount = currency === 'php' ? toPhpMinor(order.total) : order.total;
+    if (order.payment?.provider !== provider || expectedAmount !== amount)
       throw new HttpError('Payment verification did not match the order.', 400);
     if (order.status !== 'PENDING') {
       if (order.payment?.status === 'PAID') return null;
@@ -283,14 +291,14 @@ export async function stripeCheckout(order: Awaited<ReturnType<typeof reserveOrd
       mode: 'payment',
       customer_email: order.email,
       client_reference_id: order.id,
-      metadata: { orderId: order.id },
+      metadata: { orderId: order.id, settlementCurrency: 'php' },
       payment_method_types: ['card'],
       line_items: [
         {
           price_data: {
-            currency: 'usd',
+            currency: 'php',
             product_data: { name: 'ORVEN order ' + order.number },
-            unit_amount: order.total,
+            unit_amount: toPhpMinor(order.total),
           },
           quantity: 1,
         },

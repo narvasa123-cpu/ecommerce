@@ -1,9 +1,26 @@
-export const money = (cents: number) =>
-  new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: cents % 100 ? 2 : 0,
-  }).format(cents / 100);
+// Existing records remain in USD cents. One fixed rate is shared by the
+// storefront, admin editors, exports and PHP payment settlement.
+// Source: https://taxcalculator.com.ph/exchange-rates (5 October 2026).
+export const PHP_PER_USD = 62.647;
+export const FX_REFERENCE_DATE = '2026-10-05';
+export const toPhpMinor = (cents: number) => Math.round((cents * 626470) / 10000);
+export const phpAmount = (cents: number) => (toPhpMinor(cents) / 100).toFixed(2);
+export const fromPhpAmount = (pesos: number) => Math.round((pesos * 100) / PHP_PER_USD);
+export const conversionRounding = (totals: {
+  subtotal: number;
+  discount: number;
+  shipping: number;
+  tax: number;
+  total: number;
+}) =>
+  toPhpMinor(totals.total) -
+  (toPhpMinor(totals.subtotal) -
+    toPhpMinor(totals.discount) +
+    toPhpMinor(totals.shipping) +
+    toPhpMinor(totals.tax));
+export const phpMinorMoney = (centavos: number) =>
+  new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(centavos / 100);
+export const money = (cents: number) => phpMinorMoney(toPhpMinor(cents));
 export type Promo = {
   kind: string;
   value: number;
@@ -19,9 +36,9 @@ export function priceOrder(
   delivery = 'standard',
   promotion?: Promo | null,
 ) {
-  if (!['US', 'FR', 'DE', 'NL', 'IE'].includes(country))
+  if (!['PH', 'US', 'FR', 'DE', 'NL', 'IE'].includes(country))
     throw new Error(
-      'We currently deliver to the US, France, Germany, the Netherlands and Ireland.',
+      'We currently deliver to the Philippines, US, France, Germany, the Netherlands and Ireland.',
     );
   if (!['standard', 'express'].includes(delivery))
     throw new Error('Choose standard or express delivery.');
@@ -57,15 +74,17 @@ export function priceOrder(
     subtotal === 0
       ? 0
       : delivery === 'express'
-        ? country === 'US'
+        ? ['PH', 'US'].includes(country)
           ? 2500
           : 4000
         : subtotal - discount >= 25000
           ? 0
-          : country === 'US'
+          : ['PH', 'US'].includes(country)
             ? 1200
             : 2000;
   // Demonstration destination tax. Replace with an approved tax service before launch.
-  const tax = Math.round((subtotal - discount) * (country === 'US' ? 0.08 : 0.2));
+  const tax = Math.round(
+    (subtotal - discount) * (country === 'PH' ? 0.12 : country === 'US' ? 0.08 : 0.2),
+  );
   return { subtotal, discount, shipping, tax, total: subtotal - discount + shipping + tax };
 }

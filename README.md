@@ -4,6 +4,12 @@ A complete e-commerce concept for considered leather goods, hosted on Cloudflare
 
 ## Run locally
 
+### Philippine peso conversion
+
+Storefront prices, admin analytics, monetary editors, product filters and CSV exports use PHP. The fixed reference rate is **US$1 = ₱62.647**, dated 5 October 2026, from [the published exchange-rate table](https://taxcalculator.com.ph/exchange-rates). It is not a live exchange-rate feed. For example, US$200 becomes ₱12,529.40. Existing database/API monetary values remain in USD cents to preserve historical records; `src/lib/pricing.ts` is the conversion boundary. PHP editor inputs round to the nearest base-currency cent (about ₱0.63), so arbitrary centavo prices cannot be stored exactly. Checkout displays any conversion-rounding adjustment separately.
+
+New Stripe **test** sessions settle in PHP centavos. Signed callbacks and expired-session reconciliation verify both the session currency and converted total; legacy USD sessions still reconcile. The default delivery country is the Philippines. PH delivery uses the converted domestic demonstration fees and an illustrative 12% tax estimate, not a compliant tax calculation. No data migration or live charge is performed.
+
 Requires Node.js 22.13+ (Node 24 for the optional SQLite import), npm, and a PostgreSQL database. Copy `.env.example` to `.env`, then set `DATABASE_URL` and `DIRECT_URL` from Supabase **Connect > Session pooler**, using port 5432 and a URL-encoded database password. Keep both variables server-only. In PowerShell:
 
 ```powershell
@@ -46,7 +52,7 @@ The Worker uses OpenNext and the configured `HYPERDRIVE` binding for Supabase. H
 
 Sign in at `/account`; administrators land at `/admin`. These credentials are development-only. Set `SEED_ADMIN_PASSWORD` and `SEED_CUSTOMER_PASSWORD` before first seeding a different environment. Changing the seed variables does not silently overwrite existing users' passwords.
 
-Seed includes 3 collections, 21 products, 42 variants, low-stock/sold-out/made-to-order examples, 3 historical orders and `WELCOME10` (10%, $200 minimum) / `ATELIER25` ($25, $300 minimum). Promotion thresholds are before discount; complimentary standard delivery is from $250 after discount.
+Seed includes 3 collections, 21 products, 42 variants, low-stock/sold-out/made-to-order examples, 3 historical orders and `WELCOME10` (10%, ₱12,529.40 minimum) / `ATELIER25` (₱1,566.18, ₱18,794.10 minimum). Promotion thresholds are before discount; complimentary standard delivery is from ₱15,661.75 after discount. Seed records retain the original base-currency amounts.
 
 ## What works
 
@@ -77,7 +83,7 @@ Forward test webhooks with the Stripe CLI:
 stripe listen --forward-to localhost:3000/api/stripe/webhook
 ```
 
-Use the listener's signing secret. Subscribe to `checkout.session.completed`, `checkout.session.expired`, `checkout.session.async_payment_succeeded`, and `checkout.session.async_payment_failed`. Only verified provider-confirmed, USD, non-live, paid events mark Stripe orders paid. The return URL alone cannot do so. The order page has a refresh action for pending status. Only `sk_test_` keys are accepted.
+Use the listener's signing secret. Subscribe to `checkout.session.completed`, `checkout.session.expired`, `checkout.session.async_payment_succeeded`, and `checkout.session.async_payment_failed`. Only verified provider-confirmed, non-live, paid events in the expected session currency mark Stripe orders paid (PHP for new sessions, USD for legacy sessions). The return URL alone cannot do so. The order page has a refresh action for pending status. Only `sk_test_` keys are accepted.
 
 Checkout re-fetches product prices and promotion rules. Inventory decrement, usage reservation, order/items/payment creation and audit log occur in one transaction; insufficient stock rolls everything back. The unique idempotency key returns the original order on retries; a bag cannot have two simultaneous pending checkouts. Payment confirmation is idempotent. Failures, cancellations and expiry restore stock and promotion usage once.
 
@@ -93,7 +99,7 @@ The admin at `/admin` has a dedicated sidebar, current-section navigation, mobil
 
 Lists use server-side search, relevant status filters, URL state and 12-record pagination. Products and orders also support sorting. Orders, products and inventory have filtered CSV exports across pages (up to 10,000 records); export endpoints require an administrator session, disable caching, and neutralize spreadsheet formula cells. Customer messages have a dedicated Inbox; activity records identify known administrators by name.
 
-Product prices, fixed discounts and minimum spends are entered in **USD dollars**, then converted to integer cents for server storage. Percentage discounts use whole percent. Promotion expiry is explicitly **UTC** to avoid device-timezone drift.
+Product prices, fixed discounts and minimum spends are entered in **PHP pesos**, then reverse-converted to integer USD cents for server storage. Percentage discounts use whole percent. Promotion expiry is explicitly **UTC** to avoid device-timezone drift.
 
 The product editor has image selection/reordering and named fields for SKUs, colour swatches, sizes and made-to-order variants. Copy owned files into `public/images` and add their filenames to `public/images/manifest.json` to expand the bundled media library, then rebuild. Remote URLs and arbitrary filesystem paths are rejected; browser uploading is not implemented. New variants start with zero stock; existing variants remain to protect historical references. New products start unpublished. Archive products by clearing the Published checkbox.
 
@@ -136,7 +142,7 @@ Mobile Lighthouse against the local production build:
 
 The performance target of 90 is **not met in this measurement**. Main-thread blocking remains the limiting factor (490ms home, 1,040ms product). Scores depend on the test environment; further profiling and reducing hydration work are required before claiming that target. Full reports and refreshed desktop/360px screenshots are in `artifacts/`; see [verification details](artifacts/verification.md).
 
-- Brand: ORVEN; category: leather bags and small goods; quiet contemporary design; USD $145–$610 sample range; design-conscious adults; ship-to US, FR, DE, NL and IE.
+- Brand: ORVEN; category: leather bags and small goods; quiet contemporary design; PHP-converted sample prices; design-conscious adults; ship-to PH, US, FR, DE, NL and IE.
 - Storage now targets Supabase PostgreSQL through Cloudflare Hyperdrive. The local SQLite database is retained only as a read-only import source; the app no longer writes to it. A custom bcrypt/database-session implementation provides server-side authorization and session revocation. Cloudflare uses the OpenNext adapter and the configured Hyperdrive binding.
 - Shipping and tax are **demonstration rules**, not real tax advice or compliant jurisdiction calculations. Integrate a verified tax/duty provider before real commerce.
 - Emails use the expressly allowed console development mailer. Add a transactional email provider and durable outbox before launch; do not use reset URLs in production logs. Newsletter sending and unsubscribe are not implemented, and no marketing is sent.

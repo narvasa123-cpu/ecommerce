@@ -2,6 +2,7 @@
 import { useState, type ReactNode, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/client';
+import { fromPhpAmount } from '@/lib/pricing';
 export function AdminForm({
   endpoint,
   children,
@@ -42,7 +43,7 @@ export function AdminForm({
         body[k] = Number(body[k]);
       });
       currencies.forEach((k) => {
-        body[k] = Math.round(Number(body[k]) * 100);
+        body[k] = fromPhpAmount(Number(body[k]));
       });
       booleans.forEach((k) => {
         body[k] = fields.get(k) === 'on';

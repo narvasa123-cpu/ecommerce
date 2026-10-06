@@ -14,6 +14,7 @@ import { reserveOrder, confirmPayment, cancelOrder, releaseExpired } from '../sr
 import { requireAdmin, digest } from '../src/lib/security';
 import { POST } from '../src/app/api/store/[...path]/route';
 import { getCart } from '../src/lib/cart';
+import { toPhpMinor } from '../src/lib/pricing';
 import { GET as exportRecords } from '../src/app/api/admin/export/route';
 const address = {
   name: 'Sample Customer',
@@ -93,6 +94,23 @@ async function prepare(cartId = 'test-cart', quantity = 1) {
   return { cartId, key: randomUUID(), email: 'sample@example.test', address, delivery: 'standard' };
 }
 describe('Database checkout and stock reservations', () => {
+  it('verifies converted PHP test payments and rejects base amounts presented as pesos', async () => {
+    const order = await reserveOrder(await prepare());
+    await db.payment.update({ where: { orderId: order.id }, data: { provider: 'stripe' } });
+    await expect(
+      confirmPayment(order.id, 'php-test', order.total, 'stripe', 'php'),
+    ).rejects.toThrow('Payment verification');
+    await confirmPayment(order.id, 'php-test', toPhpMinor(order.total), 'stripe', 'php');
+    expect((await db.payment.findUniqueOrThrow({ where: { orderId: order.id } })).status).toBe(
+      'PAID',
+    );
+  });
+  it('still verifies legacy USD test payments without converting the provider amount', async () => {
+    const order = await reserveOrder(await prepare());
+    await db.payment.update({ where: { orderId: order.id }, data: { provider: 'stripe' } });
+    await confirmPayment(order.id, 'usd-test', order.total, 'stripe', 'usd');
+    expect((await db.order.findUniqueOrThrow({ where: { id: order.id } })).status).toBe('PAID');
+  });
   it('serializes concurrent retries for the same checkout', async () => {
     const input = await prepare();
     const orders = await Promise.all([reserveOrder(input), reserveOrder(input)]);
@@ -176,7 +194,10 @@ describe('Database checkout and stock reservations', () => {
     );
     expect(response.status).toBe(200);
     expect(response.headers.get('cache-control')).toBe('private, no-store');
-    expect(await response.text()).toContain('Test Tote');
+    const exported = await response.text();
+    expect(exported).toContain('Test Tote');
+    expect(exported).toContain('Price PHP');
+    expect(exported).toContain('18794.10');
     const empty = await exportRecords(
       new Request(
         'http://localhost:3000/api/admin/export?section=products&q=missing-export-record',

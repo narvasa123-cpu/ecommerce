@@ -39,7 +39,7 @@ export function Checkout({
       city: '',
       region: '',
       postalCode: '',
-      country: 'US',
+      country: 'PH',
     },
   );
   const [delivery, setDelivery] = useState('standard');
@@ -313,6 +313,7 @@ export function Checkout({
                       onChange={(e) => setField('country', e.target.value)}
                       autoComplete="shipping country"
                     >
+                      <option value="PH">Philippines</option>
                       <option value="US">United States</option>
                       <option value="FR">France</option>
                       <option value="DE">Germany</option>
@@ -354,8 +355,8 @@ export function Checkout({
                           ? money(quote.totals.shipping)
                           : 'Calculating…'
                       : value === 'express'
-                        ? money(address.country === 'US' ? 2500 : 4000)
-                        : 'From $0'}
+                        ? money(['PH', 'US'].includes(address.country) ? 2500 : 4000)
+                        : 'From ₱0.00'}
                   </label>
                 ))}
               </fieldset>
@@ -455,7 +456,8 @@ export function Checkout({
           )}
           <PromoForm cart={cart} refresh={refresh} />
           <p className="small muted" style={{ marginTop: 20 }}>
-            Demonstration tax estimate: 8% US, 20% EU. Final totals are calculated on the server.
+            Demonstration tax estimate: 12% PH, 8% US, 20% EU; not a compliant tax determination.
+            PHP totals use a fixed conversion rate and may differ by centavos due to rounding.
           </p>
           <p
             className="small muted"

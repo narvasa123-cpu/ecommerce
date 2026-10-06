@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { AdminForm } from '@/components/admin-form';
 import { Panel } from './ui';
+import { phpAmount, PHP_PER_USD } from '@/lib/pricing';
 const transitions: Record<string, string[]> = {
   PAID: ['PAID', 'PROCESSING', 'SHIPPED'],
   PROCESSING: ['PROCESSING', 'SHIPPED'],
@@ -83,7 +84,7 @@ type Promotion = {
 export function PromotionEditor({ promotion: p }: { promotion: Promotion | null }) {
   const [kind, setKind] = useState(p?.kind || 'PERCENT');
   const [value, setValue] = useState(
-    String(p ? (p.kind === 'FIXED' ? p.value / 100 : p.value) : 10),
+    String(p ? (p.kind === 'FIXED' ? phpAmount(p.value) : p.value) : 10),
   );
   return (
     <Panel title="Promotion details">
@@ -126,26 +127,26 @@ export function PromotionEditor({ promotion: p }: { promotion: Promotion | null 
               </select>
             </label>
             <label className="field">
-              {kind === 'PERCENT' ? 'Percentage off' : 'Amount off (USD)'}
+              {kind === 'PERCENT' ? 'Percentage off' : 'Amount off (PHP)'}
               <input
                 type="number"
                 name="value"
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
                 required
-                min={kind === 'PERCENT' ? 1 : 0.01}
-                max={kind === 'PERCENT' ? 100 : 1000}
+                min={kind === 'PERCENT' ? 1 : Number(phpAmount(1))}
+                max={kind === 'PERCENT' ? 100 : 1000 * PHP_PER_USD}
                 step={kind === 'PERCENT' ? 1 : 0.01}
               />
             </label>
           </div>
           <div className="fields-row">
             <label className="field">
-              Minimum spend (USD)
+              Minimum spend (PHP)
               <input
                 type="number"
                 name="minimum"
-                defaultValue={p ? (p.minimum / 100).toFixed(2) : '0.00'}
+                defaultValue={p ? phpAmount(p.minimum) : '0.00'}
                 min={0}
                 step="0.01"
                 required

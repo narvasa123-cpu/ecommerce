@@ -41,8 +41,8 @@ export function Header() {
     <>
       <div className="announcement">
         <span>Considered design. Everyday companions.</span>
-        <span>Complimentary standard delivery on orders over $250</span>
-        <span>USD · US & EU</span>
+        <span>Complimentary standard delivery on orders of ₱15,661.75 or more</span>
+        <span>PHP · Philippines & international</span>
       </div>
       <header className="header">
         <button

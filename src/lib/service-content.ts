@@ -16,15 +16,15 @@ export const serviceContent: Record<
     sections: [
       {
         title: 'Where we send',
-        text: 'This concept store supports delivery addresses in the United States, France, Germany, the Netherlands, and Ireland. All amounts are in US dollars. No actual products are shipped during sandbox or Stripe test checkout.',
+        text: 'This concept store supports delivery addresses in the Philippines, United States, France, Germany, the Netherlands, and Ireland. All amounts are in Philippine pesos, converted at a fixed reference rate of ₱62.647 per US$1 (5 October 2026); this is not a live exchange-rate feed. No actual products are shipped during sandbox or Stripe test checkout.',
       },
       {
         title: 'At a pace that suits you',
-        text: 'Standard delivery is illustrated as 3–7 working days, with a $12 US or $20 EU charge. It is complimentary on orders of $250 or more after discounts. Express delivery is illustrated as 1–3 working days, with a $25 US or $40 EU charge. Made-to-order pieces have an additional 4–6 week preparation period.',
+        text: 'Standard delivery is illustrated as 3–7 working days, with a ₱751.76 PH/US or ₱1,252.94 EU charge. It is complimentary on orders of ₱15,661.75 or more after discounts. Express delivery is illustrated as 1–3 working days, with a ₱1,566.18 PH/US or ₱2,505.88 EU charge. Made-to-order pieces have an additional 4–6 week preparation period.',
       },
       {
         title: 'A clear total',
-        text: 'Your delivery charge and estimated tax are shown before confirmation. The sandbox uses illustrative destination tax rates of 8% for US addresses and 20% for EU addresses. These are development estimates and do not represent a compliant tax determination.',
+        text: 'Your delivery charge and estimated tax are shown before confirmation. The sandbox uses illustrative destination tax rates of 12% for Philippine addresses, 8% for US addresses and 20% for EU addresses. These are development estimates and do not represent a compliant tax determination.',
       },
     ],
   },

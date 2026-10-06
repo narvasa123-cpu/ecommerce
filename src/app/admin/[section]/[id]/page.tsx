@@ -4,7 +4,7 @@ import mediaManifest from '../../../../../public/images/manifest.json';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { requireAdmin } from '@/lib/security';
-import { money } from '@/lib/pricing';
+import { money, conversionRounding, phpMinorMoney } from '@/lib/pricing';
 import { dateLabel } from '@/lib/admin';
 import { AdminForm } from '@/components/admin-form';
 import { PageHeading, Panel, Badge } from '@/components/admin/ui';
@@ -182,7 +182,12 @@ export default async function AdminEdit({
                   <span>{money(o.tax)}</span>
                 </div>
                 <div>
-                  <span>Total · USD</span>
+                  <span>
+                    Total · PHP
+                    {conversionRounding(o) !== 0
+                      ? ` (includes ${phpMinorMoney(conversionRounding(o))} currency rounding)`
+                      : ''}
+                  </span>
                   <span>{money(o.total)}</span>
                 </div>
               </div>

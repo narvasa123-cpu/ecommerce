@@ -37,7 +37,7 @@ const addressSchema = z.object({
   city: z.string().trim().min(2).max(100),
   region: z.string().trim().min(1).max(100),
   postalCode: z.string().trim().min(3).max(20),
-  country: z.enum(['US', 'FR', 'DE', 'NL', 'IE']),
+  country: z.enum(['PH', 'US', 'FR', 'DE', 'NL', 'IE']),
 });
 const localImage = z
   .string()
@@ -101,7 +101,7 @@ export async function GET(request: Request, context: Context) {
       const u = new URL(request.url);
       return NextResponse.json(
         await getCart(
-          u.searchParams.get('country') || 'US',
+          u.searchParams.get('country') || 'PH',
           u.searchParams.get('delivery') || 'standard',
         ),
         { headers: { 'Cache-Control': 'no-store' } },
@@ -255,7 +255,7 @@ export async function POST(request: Request, context: Context) {
             });
             priceOrder(
               items.map((i) => ({ price: i.variant.product.price, quantity: i.quantity })),
-              'US',
+              'PH',
               'standard',
               promo,
             );

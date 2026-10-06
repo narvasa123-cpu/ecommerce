@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Plus, ArrowUp, ArrowDown, Trash2 } from 'lucide-react';
 import { AdminForm } from '@/components/admin-form';
 import { Panel } from './ui';
+import { phpAmount, PHP_PER_USD } from '@/lib/pricing';
 type Variant = {
   id?: string;
   sku: string;
@@ -107,17 +108,20 @@ export function ProductEditor({
               </label>
               <div className="fields-row">
                 <label className="field">
-                  Price (USD)
+                  Price (PHP)
                   <input
                     name="price"
                     type="number"
-                    min={1}
-                    max={100000}
+                    min={Number(phpAmount(100))}
+                    max={100000 * PHP_PER_USD}
                     step="0.01"
-                    defaultValue={product ? (product.price / 100).toFixed(2) : ''}
+                    defaultValue={product ? phpAmount(product.price) : ''}
                     required
-                    placeholder="395.00"
+                    placeholder="24745.57"
                   />
+                  <small>
+                    PHP at the fixed reference rate. Saved to the nearest base-currency cent.
+                  </small>
                 </label>
                 <label className="field">
                   Category

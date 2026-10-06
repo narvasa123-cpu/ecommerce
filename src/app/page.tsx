@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { money } from '@/lib/pricing';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
 const collections = [
   {
@@ -25,7 +26,7 @@ const products = [
   {
     slug: 'the-forma-tote',
     name: 'The Forma Tote',
-    price: '$485',
+    price: money(48500),
     image: '/images/tote.webp',
     material: 'Full-grain leather',
     colour: 'Cognac',
@@ -33,7 +34,7 @@ const products = [
   {
     slug: 'the-arc-shoulder',
     name: 'The Arc Shoulder',
-    price: '$365',
+    price: money(36500),
     image: '/images/shoulder.webp',
     material: 'Pebbled leather',
     colour: 'Ink',
@@ -41,7 +42,7 @@ const products = [
   {
     slug: 'the-line-crossbody',
     name: 'The Line Crossbody',
-    price: '$295',
+    price: money(29500),
     image: '/images/crossbody.webp',
     material: 'Full-grain leather',
     colour: 'Cognac',
@@ -49,7 +50,7 @@ const products = [
   {
     slug: 'the-fold-wallet',
     name: 'The Fold Wallet',
-    price: '$185',
+    price: money(18500),
     image: '/images/wallet.webp',
     material: 'Full-grain leather',
     colour: 'Ink',

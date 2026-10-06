@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin, HttpError } from '@/lib/security';
 import { db } from '@/lib/db';
+import { phpAmount, conversionRounding } from '@/lib/pricing';
 import { adminQuery, csvCell, productWhere, orderWhere, inventoryWhere } from '@/lib/admin';
 export async function GET(request: Request) {
   try {
@@ -26,11 +27,12 @@ export async function GET(request: Request) {
           'Status',
           'Payment status',
           'Provider',
-          'Subtotal USD',
-          'Discount USD',
-          'Shipping USD',
-          'Tax USD',
-          'Total USD',
+          'Subtotal PHP',
+          'Discount PHP',
+          'Shipping PHP',
+          'Tax PHP',
+          'Currency rounding PHP',
+          'Total PHP',
         ],
         ...records.map((o) => [
           o.number,
@@ -39,11 +41,12 @@ export async function GET(request: Request) {
           o.status,
           o.payment?.status,
           o.payment?.provider,
-          (o.subtotal / 100).toFixed(2),
-          (o.discount / 100).toFixed(2),
-          (o.shipping / 100).toFixed(2),
-          (o.tax / 100).toFixed(2),
-          (o.total / 100).toFixed(2),
+          phpAmount(o.subtotal),
+          phpAmount(o.discount),
+          phpAmount(o.shipping),
+          phpAmount(o.tax),
+          (conversionRounding(o) / 100).toFixed(2),
+          phpAmount(o.total),
         ]),
       ];
     } else if (section === 'products') {
@@ -63,13 +66,13 @@ export async function GET(request: Request) {
       if (records.length > 10000)
         throw new HttpError('Please narrow your filters to export 10,000 or fewer records.');
       rows = [
-        ['Product', 'Slug', 'Status', 'Collection', 'Price USD', 'Variants', 'Available stock'],
+        ['Product', 'Slug', 'Status', 'Collection', 'Price PHP', 'Variants', 'Available stock'],
         ...records.map((p) => [
           p.name,
           p.slug,
           p.active ? 'Published' : 'Archived',
           p.collection.name,
-          (p.price / 100).toFixed(2),
+          phpAmount(p.price),
           p.variants.length,
           p.variants.reduce((s, v) => s + (v.inventory?.quantity || 0), 0),
         ]),

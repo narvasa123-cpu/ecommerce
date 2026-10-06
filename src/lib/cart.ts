@@ -2,7 +2,7 @@ import { db } from './db';
 import { cartId } from './security';
 import { priceOrder } from './pricing';
 import { productInclude } from './catalog';
-export async function getCart(country = 'US', delivery = 'standard') {
+export async function getCart(country = 'PH', delivery = 'standard') {
   const id = await cartId();
   const pending = id
     ? await db.order.findFirst({

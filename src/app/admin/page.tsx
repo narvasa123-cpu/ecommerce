@@ -102,7 +102,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       </div>
       <div className="a-report-note">
         <span className="a-mode-dot" /> Test-store data <span>·</span> {dateLabel(since)} –{' '}
-        {dateLabel(today)} <span>·</span> USD
+        {dateLabel(today)} <span>·</span> PHP
       </div>
       <div className="a-metrics">
         {[
@@ -144,7 +144,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       <div className="a-dashboard-grid">
         <Panel
           title="Revenue trends"
-          aside={<span className="a-muted">Paid order value · USD</span>}
+          aside={<span className="a-muted">Paid order value · PHP</span>}
         >
           <div className="a-chart">
             <div className="a-chart-summary">
@@ -155,7 +155,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
               <div className="a-chart-axis">
                 <span>{money(max)}</span>
                 <span>{money(Math.round(max / 2))}</span>
-                <span>$0</span>
+                <span>₱0</span>
               </div>
               <div
                 className="a-chart-bars"

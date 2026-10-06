@@ -5,8 +5,9 @@ import Image from 'next/image';
 import { ArrowRight, Minus, Plus, ShoppingBag } from 'lucide-react';
 import { useStore, type CartData } from './store-provider';
 import { api } from '@/lib/client';
-import { money } from '@/lib/pricing';
+import { money, conversionRounding, phpMinorMoney } from '@/lib/pricing';
 export function Totals({ totals }: { totals: CartData['totals'] }) {
+  const rounding = conversionRounding(totals);
   return (
     <div className="summary-lines">
       <div className="row">
@@ -27,9 +28,15 @@ export function Totals({ totals }: { totals: CartData['totals'] }) {
         <span>Estimated tax</span>
         <span>{money(totals.tax)}</span>
       </div>
+      {rounding !== 0 && (
+        <div className="row">
+          <span>Currency rounding</span>
+          <span>{phpMinorMoney(rounding)}</span>
+        </div>
+      )}
       <div className="row summary-total">
         <span>
-          Total <small className="muted">USD</small>
+          Total <small className="muted">PHP</small>
         </span>
         <span>{money(totals.total)}</span>
       </div>
@@ -194,8 +201,8 @@ export function CartPage() {
               Continue to checkout <ArrowRight size={16} />
             </Link>
             <p className="small muted" style={{ marginTop: 16 }}>
-              Estimates for US standard delivery. Your destination and delivery choice are confirmed
-              at checkout.
+              Estimates for Philippine standard delivery; PHP conversion rounding may differ by
+              centavos. Your destination and delivery choice are confirmed at checkout.
             </p>
             <p className="sample-note">Concept store · No live charges</p>
           </aside>

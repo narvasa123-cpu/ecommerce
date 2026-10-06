@@ -5,6 +5,7 @@ import { db } from '@/lib/db';
 import { productInclude } from '@/lib/catalog';
 import { ProductCard } from '@/components/product-card';
 import type { Prisma } from '@prisma/client';
+import { fromPhpAmount, phpAmount, money } from '@/lib/pricing';
 export const metadata: Metadata = {
   title: 'The collection',
   description:
@@ -25,7 +26,7 @@ export default async function Collections({
   if (query.collection) where.collection = { slug: query.collection };
   if (query.material) where.material = query.material;
   const max = Number(query.max);
-  if (max > 0 && Number.isFinite(max)) where.price = { lte: Math.round(max * 100) };
+  if (max > 0 && Number.isFinite(max)) where.price = { lte: fromPhpAmount(max) };
   const count = await db.product.count({ where });
   const pages = Math.max(1, Math.ceil(count / 12));
   const rawPage = Number(query.page);
@@ -117,9 +118,9 @@ export default async function Collections({
           Maximum price
           <select name="max" defaultValue={query.max || ''}>
             <option value="">Any price</option>
-            <option value="200">Up to $200</option>
-            <option value="350">Up to $350</option>
-            <option value="500">Up to $500</option>
+            <option value={phpAmount(20000)}>Up to {money(20000)}</option>
+            <option value={phpAmount(35000)}>Up to {money(35000)}</option>
+            <option value={phpAmount(50000)}>Up to {money(50000)}</option>
           </select>
         </label>
         <label>

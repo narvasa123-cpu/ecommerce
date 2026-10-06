@@ -45,6 +45,7 @@ export function AddressFields() {
         <label className="field">
           Country
           <select name="country" autoComplete="shipping country">
+            <option value="PH">Philippines</option>
             <option value="US">United States</option>
             <option value="FR">France</option>
             <option value="DE">Germany</option>

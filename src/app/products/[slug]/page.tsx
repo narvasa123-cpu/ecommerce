@@ -7,6 +7,7 @@ import { productInclude } from '@/lib/catalog';
 import { ProductDetail } from '@/components/product-detail';
 import { ProductCard } from '@/components/product-card';
 import { appUrl } from '@/lib/security';
+import { phpAmount } from '@/lib/pricing';
 export const dynamic = 'force-dynamic';
 type Props = { params: Promise<{ slug: string }> };
 const loadProduct = cache((slug: string) =>
@@ -41,8 +42,8 @@ export default async function ProductPage({ params }: Props) {
     sku: p.variants[0]?.sku,
     offers: {
       '@type': 'Offer',
-      priceCurrency: 'USD',
-      price: (p.price / 100).toFixed(2),
+      priceCurrency: 'PHP',
+      price: phpAmount(p.price),
       availability: 'https://schema.org/' + (stock ? 'InStock' : 'OutOfStock'),
       url: appUrl() + '/products/' + p.slug,
     },

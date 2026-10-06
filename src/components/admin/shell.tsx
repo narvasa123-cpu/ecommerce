@@ -114,7 +114,7 @@ export function AdminShell({
         </header>
         <div className="a-content">{children}</div>
         <footer className="a-footer">
-          ORVEN administration <span>USD · Test store</span>
+          ORVEN administration <span>PHP · Test store</span>
         </footer>
       </div>
       <dialog ref={menu} className="a-mobile-dialog" aria-label="Admin navigation">
