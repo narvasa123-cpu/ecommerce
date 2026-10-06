@@ -28,10 +28,34 @@ export default async function Account({
   ]);
   return (
     <div className="page-container">
-      <div className="page-heading">
-        <p className="eyebrow">YOUR ORVEN</p>
-        <h1>Welcome back, {user.name.split(' ')[0]}.</h1>
-        <p>A place for your details, and the pieces you’ve chosen.</p>
+      <div className="account-welcome">
+        <div className="page-heading">
+          <p className="eyebrow">YOUR ORVEN</p>
+          <h1>Welcome back, {user.name.split(' ')[0]}.</h1>
+          <p>A place for your details, and the pieces you’ve chosen.</p>
+        </div>
+        <Link className="button secondary" href="/collections">
+          Continue browsing
+        </Link>
+      </div>
+      <div className="account-summary" aria-label="Account summary">
+        <div>
+          <span className="eyebrow">ORDERS</span>
+          <strong>{orders.length}</strong>
+          <span className="small muted">Pieces in your history</span>
+        </div>
+        <div>
+          <span className="eyebrow">DESTINATIONS</span>
+          <strong>{addresses.length}</strong>
+          <span className="small muted">Saved delivery addresses</span>
+        </div>
+        <div>
+          <span className="eyebrow">MEMBER SINCE</span>
+          <strong>
+            {user.createdAt.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+          </strong>
+          <span className="small muted">Your ORVEN account</span>
+        </div>
       </div>
       <div className="account-grid">
         <aside className="account-profile">
