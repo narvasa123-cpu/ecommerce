@@ -1,13 +1,61 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
-import { featuredProducts } from '@/lib/catalog';
-import { db } from '@/lib/db';
-import { ProductCard } from '@/components/product-card';
-export const dynamic = 'force-dynamic';
-export default async function Home() {
-  const products = await featuredProducts();
-  const collections = await db.collection.findMany();
+const collections = [
+  {
+    slug: 'the-everyday',
+    name: 'The Everyday',
+    image: '/images/tote.webp',
+    copy: 'Room for the daily essentials.',
+  },
+  {
+    slug: 'moving-lightly',
+    name: 'Moving Lightly',
+    image: '/images/shoulder.webp',
+    copy: 'A companion for moving lightly.',
+  },
+  {
+    slug: 'small-pleasures',
+    name: 'Small Pleasures',
+    image: '/images/wallet.webp',
+    copy: 'Small details. Lasting pleasure.',
+  },
+] as const;
+const products = [
+  {
+    slug: 'the-forma-tote',
+    name: 'The Forma Tote',
+    price: '$485',
+    image: '/images/tote.webp',
+    material: 'Full-grain leather',
+    colour: 'Cognac',
+  },
+  {
+    slug: 'the-arc-shoulder',
+    name: 'The Arc Shoulder',
+    price: '$365',
+    image: '/images/shoulder.webp',
+    material: 'Pebbled leather',
+    colour: 'Ink',
+  },
+  {
+    slug: 'the-line-crossbody',
+    name: 'The Line Crossbody',
+    price: '$295',
+    image: '/images/crossbody.webp',
+    material: 'Full-grain leather',
+    colour: 'Cognac',
+  },
+  {
+    slug: 'the-fold-wallet',
+    name: 'The Fold Wallet',
+    price: '$185',
+    image: '/images/wallet.webp',
+    material: 'Full-grain leather',
+    colour: 'Ink',
+  },
+] as const;
+export default function Home() {
   return (
     <>
       <section className="hero">
@@ -117,7 +165,31 @@ export default async function Home() {
         </div>
         <div className="product-grid">
           {products.map((p) => (
-            <ProductCard key={p.id} product={p} />
+            <article className="product-card" key={p.slug}>
+              <Link prefetch={false} href={'/products/' + p.slug} className="product-picture">
+                <Image
+                  src={p.image}
+                  alt={'Illustrative concept of ' + p.name}
+                  fill
+                  sizes="(max-width: 600px) 50vw, 25vw"
+                />
+                <span className="product-tag">THE SIGNATURE EDIT</span>
+                <span className="product-arrow">
+                  <ArrowUpRight size={20} />
+                </span>
+              </Link>
+              <div className="product-name-price">
+                <h3>
+                  <Link prefetch={false} href={'/products/' + p.slug}>
+                    {p.name}
+                  </Link>
+                </h3>
+                <span>{p.price}</span>
+              </div>
+              <p className="small muted">
+                {p.material} · {p.colour}
+              </p>
+            </article>
           ))}
         </div>
         <p className="sample-note align-left">
