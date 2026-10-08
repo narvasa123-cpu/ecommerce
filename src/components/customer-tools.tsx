@@ -103,12 +103,13 @@ export function SaveProduct({ productId }: { productId: string }) {
     <div className="save-piece">
       <button
         type="button"
-        className="tool-button"
+        className="save-icon"
+        aria-label={saved ? 'Remove from saved pieces' : 'Save for later'}
         aria-pressed={saved}
         disabled={busy}
         onClick={toggle}
       >
-        <Heart size={17} fill={saved ? 'currentColor' : 'none'} aria-hidden="true" />
+        <Heart size={21} fill={saved ? 'currentColor' : 'none'} aria-hidden="true" />
         {busy ? 'Saving…' : saved ? 'Saved' : 'Save for later'}
       </button>
       {error && (

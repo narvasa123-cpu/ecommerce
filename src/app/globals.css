@@ -534,6 +534,21 @@ a:hover {
   padding: 12px 14px;
   font-size: 11px;
 }
+.save-icon {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--ivory);
+  color: var(--espresso);
+  font-size: 0;
+}
+.save-icon:hover {
+  border-color: var(--espresso);
+}
 .swatches {
   display: flex;
   align-items: center;
