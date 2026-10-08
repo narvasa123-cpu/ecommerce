@@ -25,11 +25,25 @@ test('admin dashboard is responsive, accessible and reports real periods', async
     page.viewportSize()!.width,
   );
   await expect(page.getByRole('button', { name: /Open bag/ })).toHaveCount(0);
+  await expect(page.locator('.a-attention a')).toHaveCount(3);
+  if (info.project.name === 'desktop') {
+    await page.getByRole('button', { name: 'Collapse sidebar' }).click();
+    await expect(page.locator('.admin-workspace')).toHaveClass(/a-sidebar-collapsed/);
+    await page.getByRole('button', { name: 'Expand sidebar' }).click();
+    await page.getByLabel('Search record type').selectOption('products');
+    await expect(page.locator('.a-global-search')).toHaveAttribute('action', '/admin/products');
+  }
+  await page.locator('.a-chart-column').last().click();
   await page.getByLabel('Reporting period').selectOption('7');
-  await page.getByRole('button', { name: 'Update', exact: true }).click();
   await expect(page).toHaveURL(/days=7/);
   await page.getByText('View daily values', { exact: true }).click();
-  await expect(page.locator('.a-chart-data tbody tr')).toHaveCount(7);
+  await expect(page.locator('.a-chart .a-chart-data tbody tr')).toHaveCount(7);
+  await expect(page.locator('.a-chart-column')).toHaveCount(7);
+  await page.locator('.a-chart-column').first().click();
+  await expect(page.locator('.a-chart-column').first()).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.a-chart-readout')).not.toHaveText(
+    'Select a bar to inspect daily revenue',
+  );
   await page.getByText('View daily values', { exact: true }).click();
   const audit = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag22aa'])

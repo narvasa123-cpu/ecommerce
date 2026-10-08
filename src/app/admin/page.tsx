@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import Image from 'next/image';
+import { CustomerChart, DateRange, RevenueChart } from '@/components/admin/dashboard-charts';
 import { db } from '@/lib/db';
 import { requireAdmin } from '@/lib/security';
 import { money } from '@/lib/pricing';
@@ -13,28 +15,48 @@ import {
   Receipt,
   PackageCheck,
   AlertCircle,
+  MessageSquare,
 } from 'lucide-react';
 export default async function Dashboard({ searchParams }: { searchParams: Promise<AdminParams> }) {
-  await requireAdmin();
+  const administrator = await requireAdmin();
   const params = await searchParams;
   const days = ['7', '30', '90'].includes(String(params.days)) ? Number(params.days) : 30;
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
   const since = new Date(today);
   since.setUTCDate(since.getUTCDate() - days + 1);
+  const until = new Date(today.getTime() + 86400000);
+  const period = { gte: since, lt: until };
+  const previousPeriod = { gte: new Date(since.getTime() - days * 86400000), lt: since };
+  const [previousPaid, previousOrders, statusGroups, customerDates, messages] = await Promise.all([
+    db.order.aggregate({
+      where: { createdAt: previousPeriod, payment: { status: 'PAID' } },
+      _sum: { total: true },
+      _count: true,
+    }),
+    db.order.count({ where: { createdAt: previousPeriod } }),
+    db.order.groupBy({ by: ['status'], where: { createdAt: period }, _count: true }),
+    db.user.findMany({
+      where: { role: 'CUSTOMER', createdAt: period },
+      select: { createdAt: true },
+    }),
+    db.supportMessage.count(),
+  ]);
   const [paid, count, customers, low, fulfillment, recent, activity] = await Promise.all([
     db.order.findMany({
-      where: { createdAt: { gte: since }, payment: { status: 'PAID' } },
+      where: { createdAt: period, payment: { status: 'PAID' } },
       select: {
         total: true,
         createdAt: true,
         cartId: true,
         shippingAddress: true,
-        items: { select: { variantId: true, name: true, unitPrice: true, quantity: true } },
+        items: {
+          select: { variantId: true, name: true, unitPrice: true, quantity: true, image: true },
+        },
       },
     }),
-    db.order.count({ where: { createdAt: { gte: since } } }),
-    db.user.count({ where: { role: 'CUSTOMER', createdAt: { gte: since } } }),
+    db.order.count({ where: { createdAt: period } }),
+    db.user.count({ where: { role: 'CUSTOMER', createdAt: period } }),
     db.inventory.count({ where: { quantity: { lte: 3 }, variant: { product: { active: true } } } }),
     db.order.count({
       where: { status: { in: ['PAID', 'PROCESSING'] }, payment: { status: 'PAID' } },
@@ -53,10 +75,10 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   const [variants, cartEvents, previousCustomers] = await Promise.all([
     db.variant.findMany({
       where: { id: { in: [...new Set(paid.flatMap((o) => o.items.map((i) => i.variantId)))] } },
-      select: { id: true, product: { select: { category: true } } },
+      select: { id: true, product: { select: { id: true, category: true } } },
     }),
     db.auditLog.findMany({
-      where: { action: 'CART_ACTIVITY', createdAt: { gte: since } },
+      where: { action: 'CART_ACTIVITY', createdAt: period },
       select: { entityId: true, createdAt: true },
     }),
     db.user.count({
@@ -82,41 +104,44 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
         .reduce((s, o) => s + o.total, 0),
     };
   });
-  const max = Math.max(10000, ...buckets.map((b) => b.value));
+  const compare = (current: number, previous: number) =>
+    previous > 0
+      ? `${current >= previous ? '+' : ''}${(((current - previous) / previous) * 100).toFixed(1)}%`
+      : current > 0
+        ? 'No prior baseline'
+        : 'No change';
+  const growthPoints = buckets.map((b) => ({
+    date: dateLabel(b.date),
+    value: customerDates.filter((c) => c.createdAt < new Date(b.date.getTime() + 86400000)).length,
+  }));
   return (
-    <>
+    <div className="a-overview">
       <section className="a-welcome-hero" aria-labelledby="admin-welcome-title">
         <div className="a-welcome-copy">
           <span className="a-welcome-kicker">Welcome back</span>
-          <h2 id="admin-welcome-title">Good evening, ORVEN.</h2>
+          <h2 id="admin-welcome-title">Welcome back, {administrator.name}.</h2>
           <p>Here&apos;s what&apos;s happening with your store today.</p>
           <div className="a-welcome-meta">
             <span className="a-welcome-date">
               {dateLabel(since)} – {dateLabel(today)}
             </span>
-            <span className="a-welcome-period">Last {days} days</span>
+            <DateRange days={days} />
           </div>
         </div>
-        <div className="a-welcome-art" aria-hidden="true">
-          <span className="a-art-handle" />
-          <span className="a-art-bag" />
-          <span className="a-art-vase" />
-        </div>
+        <Image
+          className="a-welcome-photo"
+          src="/images/hero.webp"
+          alt="ORVEN leather bag in a warm studio setting"
+          fill
+          sizes="(max-width: 700px) 100vw, 80vw"
+          priority
+        />
       </section>
       <div className="a-dashboard-heading">
         <PageHeading
           title="Overview"
           description="A clear view of your store, and what needs your attention."
         />
-        <form className="a-date-filter">
-          <label htmlFor="days">Reporting period</label>
-          <select id="days" name="days" defaultValue={days}>
-            <option value="7">Last 7 days</option>
-            <option value="30">Last 30 days</option>
-            <option value="90">Last 90 days</option>
-          </select>
-          <button className="a-btn">Update</button>
-        </form>
       </div>
       <div className="a-report-note">
         <span className="a-mode-dot" /> Test-store data <span>·</span> {dateLabel(since)} –{' '}
@@ -129,26 +154,33 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
             value: money(revenue),
             note: paid.length + ' confirmed payments',
             icon: Wallet,
+            change: compare(revenue, previousPaid._sum.total ?? 0),
           },
           {
             name: 'Total orders',
             value: String(count),
             note: 'All payment and fulfillment states',
             icon: ShoppingBag,
+            change: compare(count, previousOrders),
           },
           {
             name: 'Average paid order',
             value: paid.length ? money(Math.round(revenue / paid.length)) : '—',
             note: 'Includes delivery and estimated tax',
             icon: Receipt,
+            change: compare(
+              paid.length ? revenue / paid.length : 0,
+              previousPaid._count ? (previousPaid._sum.total ?? 0) / previousPaid._count : 0,
+            ),
           },
           {
             name: 'New customers',
             value: String(customers),
             note: 'Registered customer accounts',
             icon: Users,
+            change: compare(customers, previousCustomers),
           },
-        ].map(({ name, value, note, icon: Icon }) => (
+        ].map(({ name, value, note, change, icon: Icon }) => (
           <div className="a-metric" key={name}>
             <div>
               {name}
@@ -156,6 +188,15 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
             </div>
             <strong>{value}</strong>
             <p>{note}</p>
+            <span
+              className={
+                'a-metric-change ' +
+                (change.startsWith('-') ? 'negative' : change.startsWith('+') ? 'positive' : '')
+              }
+              title="Compared with the preceding reporting period"
+            >
+              {change}
+            </span>
           </div>
         ))}
       </div>
@@ -164,64 +205,10 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           title="Revenue trends"
           aside={<span className="a-muted">Paid order value · PHP</span>}
         >
-          <div className="a-chart">
-            <div className="a-chart-summary">
-              <strong>{money(revenue)}</strong>
-              <span>{paid.length} paid orders in this period</span>
-            </div>
-            <div className="a-chart-plot">
-              <div className="a-chart-axis">
-                <span>{money(max)}</span>
-                <span>{money(Math.round(max / 2))}</span>
-                <span>₱0</span>
-              </div>
-              <div
-                className="a-chart-bars"
-                role="img"
-                aria-label={
-                  'Daily paid order value over ' +
-                  days +
-                  ' days. Total ' +
-                  money(revenue) +
-                  '. Expand daily values below for all figures.'
-                }
-              >
-                {buckets.map((b) => (
-                  <div key={b.date.toISOString()} className="a-chart-column">
-                    <div
-                      style={{ height: Math.max(b.value ? 2 : 0, (b.value / max) * 100) + '%' }}
-                      title={dateLabel(b.date) + ': ' + money(b.value)}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="a-chart-dates">
-              <span>{dateLabel(since)}</span>
-              <span>{dateLabel(today)}</span>
-            </div>
-            <details className="a-chart-data">
-              <summary>View daily values</summary>
-              <div className="a-table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Date (UTC)</th>
-                      <th>Paid order value</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {buckets.map((b) => (
-                      <tr key={b.date.toISOString()}>
-                        <td>{dateLabel(b.date)}</td>
-                        <td>{money(b.value)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </details>
-          </div>
+          <RevenueChart
+            key={days}
+            points={buckets.map((b) => ({ date: dateLabel(b.date), value: b.value }))}
+          />
         </Panel>
         <Panel title="Needs attention">
           <div className="a-attention">
@@ -245,6 +232,16 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
               </div>
               <ArrowUpRight size={17} aria-hidden="true" />
             </Link>
+            <Link href="/admin/inbox">
+              <span className="a-attention-icon messages">
+                <MessageSquare size={21} aria-hidden="true" />
+              </span>
+              <div>
+                <strong>{messages} customer messages</strong>
+                <p>Saved customer inquiries · all time</p>
+              </div>
+              <ArrowUpRight size={17} aria-hidden="true" />
+            </Link>
           </div>
           <div className="a-quick-actions">
             <p className="a-kicker">QUICK ACTIONS</p>
@@ -255,6 +252,107 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
               Create a promotion <ArrowUpRight size={15} aria-hidden="true" />
             </Link>
           </div>
+        </Panel>
+      </div>
+      <div className="a-dashboard-three">
+        <Panel
+          title="Orders by status"
+          aside={
+            <Link className="a-text-link" href="/admin/orders">
+              View all
+            </Link>
+          }
+        >
+          <div className="a-order-status">
+            <div
+              className="a-order-ring"
+              style={{
+                background: `conic-gradient(${
+                  statusGroups.length
+                    ? statusGroups
+                        .map((group, i) => {
+                          const colors = [
+                            '#3b2a22',
+                            '#a8895b',
+                            '#c8bbaa',
+                            '#973f36',
+                            '#386145',
+                            '#3c637f',
+                          ];
+                          const before =
+                            (statusGroups.slice(0, i).reduce((sum, row) => sum + row._count, 0) /
+                              count) *
+                            100;
+                          return `${colors[i % colors.length]} ${before}% ${before + (group._count / count) * 100}%`;
+                        })
+                        .join(',')
+                    : 'var(--a-line) 0% 100%'
+                })`,
+              }}
+            >
+              <div>
+                <strong>{count}</strong>
+                <small>Total orders</small>
+              </div>
+            </div>
+            <div className="a-status-legend">
+              {statusGroups.map((group) => (
+                <Link key={group.status} href={'/admin/orders?state=' + group.status}>
+                  <Badge value={group.status} />
+                  <strong>{group._count}</strong>
+                  <span>{((group._count / count) * 100).toFixed(0)}%</span>
+                </Link>
+              ))}
+              {!count && <p className="a-muted">No orders in this period.</p>}
+            </div>
+          </div>
+        </Panel>
+        <Panel
+          title="Best-selling products"
+          aside={
+            <Link className="a-text-link" href="/admin/products">
+              View all
+            </Link>
+          }
+        >
+          <div className="a-top-products">
+            {breakdown.products.slice(0, 3).map((product) => {
+              const item = paid
+                .flatMap((order) => order.items)
+                .find((item) => item.name === product.name);
+              const productId = variants.find((variant) => variant.id === item?.variantId)?.product
+                .id;
+              return (
+                <Link
+                  key={product.name}
+                  href={productId ? '/admin/products/' + productId : '/admin/products'}
+                  className="a-top-product"
+                >
+                  {item?.image && <Image src={item.image} alt="" width={56} height={56} />}
+                  <div>
+                    <strong>{product.name}</strong>
+                    <small>{product.units} units sold</small>
+                    <span className="a-product-track">
+                      <span
+                        style={{
+                          width:
+                            (product.value / Math.max(1, breakdown.products[0].value)) * 100 + '%',
+                        }}
+                      />
+                    </span>
+                  </div>
+                  <span>{money(product.value)}</span>
+                </Link>
+              );
+            })}
+            {!breakdown.products.length && (
+              <p className="a-empty">Your best sellers will appear after a paid order.</p>
+            )}
+            <p className="a-muted">Gross item value before order discounts, delivery and tax.</p>
+          </div>
+        </Panel>
+        <Panel title="Customer growth">
+          <CustomerChart points={growthPoints} />
         </Panel>
       </div>
       <div className="a-dashboard-grid">
@@ -467,6 +565,6 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           </div>
         </Panel>
       </div>
-    </>
+    </div>
   );
 }
