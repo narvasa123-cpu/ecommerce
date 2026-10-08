@@ -85,6 +85,24 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   const max = Math.max(10000, ...buckets.map((b) => b.value));
   return (
     <>
+      <section className="a-welcome-hero" aria-labelledby="admin-welcome-title">
+        <div className="a-welcome-copy">
+          <span className="a-welcome-kicker">Welcome back</span>
+          <h2 id="admin-welcome-title">Good evening, ORVEN.</h2>
+          <p>Here&apos;s what&apos;s happening with your store today.</p>
+          <div className="a-welcome-meta">
+            <span className="a-welcome-date">
+              {dateLabel(since)} – {dateLabel(today)}
+            </span>
+            <span className="a-welcome-period">Last {days} days</span>
+          </div>
+        </div>
+        <div className="a-welcome-art" aria-hidden="true">
+          <span className="a-art-handle" />
+          <span className="a-art-bag" />
+          <span className="a-art-vase" />
+        </div>
+      </section>
       <div className="a-dashboard-heading">
         <PageHeading
           title="Overview"
