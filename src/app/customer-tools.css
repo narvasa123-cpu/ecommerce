@@ -70,3 +70,199 @@
   .review-heading { align-items: flex-start; flex-direction: column; gap: 16px; }
 }
 @media (prefers-reduced-motion: reduce) { .tool-button, .copy-toast { transition: none; animation: none; } }
+
+.cart-toast {
+  position: fixed;
+  z-index: 45;
+  top: calc(128px + env(safe-area-inset-top, 0px));
+  right: max(20px, env(safe-area-inset-right, 0px));
+  width: min(380px, calc(100vw - 40px));
+  padding: 18px;
+  border: 1px solid var(--line);
+  background: var(--ivory);
+  color: var(--espresso);
+  box-shadow: 0 14px 42px rgb(21 19 17 / 18%);
+  animation: cart-toast-in 240ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.cart-toast-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 34px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.cart-toast-heading strong {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+.cart-toast-check {
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  flex: 0 0 25px;
+  border-radius: 50%;
+  background: var(--espresso);
+  color: var(--ivory);
+  animation: cart-check-in 280ms 80ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.cart-toast-close {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.cart-toast-close:hover {
+  background: var(--surface);
+  color: var(--espresso);
+}
+.cart-toast-product {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 13px;
+  align-items: center;
+  padding: 14px 0;
+}
+.cart-toast-product > img {
+  width: 54px;
+  height: 66px;
+  object-fit: cover;
+  background: var(--surface);
+}
+.cart-toast-product-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  font-size: 11px;
+}
+.cart-toast-product-copy strong {
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  font-weight: 500;
+}
+.cart-toast-product-copy > span {
+  color: var(--muted);
+  line-height: 1.45;
+}
+.cart-toast-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.cart-toast-actions .button {
+  flex: 1;
+  min-height: 44px;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 11px 13px;
+  font-size: 11px;
+}
+.cart-toast-continue {
+  min-height: 44px;
+  padding: 10px 4px;
+  border: 0;
+  background: transparent;
+  color: var(--espresso);
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+.cart-toast-continue:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.cart-toast :focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 3px;
+}
+.add-spinner {
+  animation: add-spin 800ms linear infinite;
+}
+.quick-add--success {
+  border-color: var(--espresso);
+  background: var(--espresso);
+  color: var(--ivory);
+}
+.home-product-grid .quick-add--compact.quick-add--success {
+  background: #291e18;
+  color: #fffaf2;
+}
+.bag-icon-added {
+  transform-origin: 50% 30%;
+  animation: bag-icon-bump 420ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+@keyframes cart-toast-in {
+  from {
+    opacity: 0;
+    transform: translate3d(14px, -8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+@keyframes cart-check-in {
+  from {
+    opacity: 0;
+    transform: scale(0.65);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes add-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes bag-icon-bump {
+  0%,
+  100% {
+    transform: rotate(0) scale(1);
+  }
+  35% {
+    transform: rotate(-9deg) scale(1.12);
+  }
+  70% {
+    transform: rotate(5deg) scale(0.96);
+  }
+}
+@media (max-width: 760px) {
+  .cart-toast {
+    top: calc(108px + env(safe-area-inset-top, 0px));
+    right: max(12px, env(safe-area-inset-right, 0px));
+    width: min(380px, calc(100vw - 24px));
+  }
+}
+@media (max-width: 420px) {
+  .cart-toast {
+    padding: 15px;
+  }
+  .cart-toast-actions {
+    gap: 7px;
+  }
+  .cart-toast-actions .button {
+    padding-inline: 10px;
+  }
+  .cart-toast-continue {
+    font-size: 9px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cart-toast,
+  .cart-toast-check,
+  .add-spinner,
+  .bag-icon-added {
+    animation: none;
+  }
+}

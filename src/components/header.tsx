@@ -29,7 +29,7 @@ const links = [
   ['Our story', '/story'],
 ];
 export function Header() {
-  const { cart, openBag } = useStore();
+  const { cart, cartAddSequence, openBag } = useStore();
   const menu = useRef<HTMLDialogElement>(null);
   const path = usePathname();
   const count = cart?.items.reduce((s, i) => s + i.quantity, 0) || 0;
@@ -99,7 +99,13 @@ export function Header() {
             onClick={openBag}
             aria-label={'Open bag, ' + count + ' items'}
           >
-            <ShoppingBag size={20} strokeWidth={1.4} />
+            <ShoppingBag
+              key={cartAddSequence}
+              className={cartAddSequence ? 'bag-icon-added' : undefined}
+              size={20}
+              strokeWidth={1.4}
+              aria-hidden="true"
+            />
             <span className="bag-count">{count}</span>
           </button>
         </div>

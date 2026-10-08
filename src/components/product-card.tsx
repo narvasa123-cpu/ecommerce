@@ -17,9 +17,7 @@ export function ProductCard({
   product: CatalogProduct;
   compact?: boolean;
 }) {
-  const v =
-    (compact && p.variants.find((variant) => (variant.inventory?.quantity || 0) > 0)) ||
-    p.variants[0];
+  const v = p.variants.find((variant) => (variant.inventory?.quantity || 0) > 0) || p.variants[0];
   const stock = p.variants.reduce((s, v) => s + (v.inventory?.quantity || 0), 0);
   const lowStock = lowStockLabel(stock, v?.madeToOrder);
   const originalImage = p.images[0]?.url || '/images/tote.webp';

@@ -1,8 +1,8 @@
 'use client';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, ArrowLeft, Plus, X } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Check, LoaderCircle, Plus, X } from 'lucide-react';
 import { useStore } from './store-provider';
 import { ProductPrice, SaveProduct } from './customer-tools';
 import type { CatalogProduct } from '@/lib/catalog';
@@ -20,9 +20,15 @@ export function ProductDetail({ product: p }: { product: CatalogProduct }) {
   const [index, setIndex] = useState(0);
   const [variantId, setVariantId] = useState(p.variants[0]?.id);
   const [busy, setBusy] = useState(false);
+  const [added, setAdded] = useState(false);
   const [error, setError] = useState('');
   const zoom = useRef<HTMLDialogElement>(null);
   const { add } = useStore();
+  useEffect(() => {
+    if (!added) return;
+    const timer = window.setTimeout(() => setAdded(false), 1400);
+    return () => window.clearTimeout(timer);
+  }, [added]);
   const v = p.variants.find((v) => v.id === variantId);
   const quantity = v?.inventory?.quantity || 0;
   const photos = p.images.length
@@ -35,6 +41,7 @@ export function ProductDetail({ product: p }: { product: CatalogProduct }) {
     setError('');
     try {
       await add(v.id);
+      setAdded(true);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -135,6 +142,7 @@ export function ProductDetail({ product: p }: { product: CatalogProduct }) {
                 onClick={() => {
                   setVariantId(option.id);
                   setError('');
+                  setAdded(false);
                 }}
               >
                 <span className="color-dot" style={{ backgroundColor: option.colorHex }} />
@@ -159,15 +167,29 @@ export function ProductDetail({ product: p }: { product: CatalogProduct }) {
           {stockLabel(quantity, v?.madeToOrder || false)}
           {v?.madeToOrder ? ' · Estimated dispatch in 4–6 weeks' : ''}
         </p>
-        <button className="button full" disabled={busy || quantity === 0} onClick={addToBag}>
+        <button
+          type="button"
+          className={'button full product-add-button' + (added ? ' product-add--success' : '')}
+          disabled={busy || added || quantity === 0}
+          aria-live="polite"
+          onClick={addToBag}
+        >
           {busy
-            ? 'Adding to your bag…'
-            : quantity === 0
-              ? 'Currently unavailable'
-              : v?.madeToOrder
-                ? 'Order this piece'
-                : 'Add to bag'}
-          <ArrowRight size={16} />
+            ? 'Adding…'
+            : added
+              ? 'Added'
+              : quantity === 0
+                ? 'Currently unavailable'
+                : v?.madeToOrder
+                  ? 'Order this piece'
+                  : 'Add to bag'}
+          {busy ? (
+            <LoaderCircle className="add-spinner" size={16} aria-hidden="true" />
+          ) : added ? (
+            <Check size={16} aria-hidden="true" />
+          ) : (
+            <ArrowRight size={16} aria-hidden="true" />
+          )}
         </button>
         {error && (
           <p className="form-error" role="alert">

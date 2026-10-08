@@ -62,8 +62,12 @@ test('browse → add to bag → sandbox checkout → confirmation', async ({ pag
     .getByRole('link')
     .click();
   await page.getByRole('button', { name: 'Add to bag', exact: true }).click();
-  await expect(page.getByRole('dialog', { name: /Your bag/ })).toBeVisible();
-  await page.getByRole('dialog').getByRole('link', { name: 'Continue to checkout' }).click();
+  await expect(page.locator('.cart-toast')).toContainText('Added to your bag');
+  await expect(page.locator('.cart-toast')).toContainText('The Forma Tote');
+  await expect(page.getByRole('button', { name: 'Open bag, 1 items' })).toBeVisible();
+  await page.locator('.cart-toast').getByRole('link', { name: 'View Bag' }).click();
+  await expect(page).toHaveURL(/\/cart$/);
+  await page.getByRole('link', { name: 'Continue to checkout' }).click();
   await page
     .getByRole('main')
     .getByLabel('Email address', { exact: true })
@@ -79,6 +83,54 @@ test('browse → add to bag → sandbox checkout → confirmation', async ({ pag
   await expect(page.getByRole('heading', { name: 'Thoughtfully chosen.' })).toBeVisible();
   await expect(page.getByText('Simulated order.', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Open bag, 0 items' })).toBeVisible();
+});
+test('adding a product keeps the customer on the page and confirms the saved cart item', async ({
+  page,
+}) => {
+  const product = {
+    id: 'cart-ui-product',
+    name: 'The Forma Tote',
+    slug: 'the-forma-tote',
+    price: 790000,
+    salePercent: 0,
+    images: [{ id: 'cart-ui-image', url: '/images/tote.webp', alt: 'Forma Tote' }],
+  };
+  const cartResponse = (variantId?: string) => ({
+    id: 'cart-ui-test',
+    pendingOrder: null,
+    promotionCode: '',
+    promoError: '',
+    items: variantId
+      ? [
+          {
+            id: 'cart-ui-item',
+            variantId,
+            quantity: 1,
+            variant: { id: variantId, color: 'Cognac', size: 'One size', product },
+          },
+        ]
+      : [],
+    totals: { subtotal: 790000, discount: 0, shipping: 0, tax: 0, total: 790000 },
+  });
+  await page.route('**/api/csrf', (route) => route.fulfill({ json: { token: 'cart-ui-test' } }));
+  await page.route('**/api/store/cart', (route) => route.fulfill({ json: cartResponse() }));
+  await page.route('**/api/store/cart/item', async (route) => {
+    const body = route.request().postDataJSON() as { variantId: string };
+    await route.fulfill({ json: cartResponse(body.variantId) });
+  });
+
+  await page.goto('/products/the-forma-tote');
+  await page.getByRole('button', { name: 'Add to bag', exact: true }).click();
+  await expect(page).toHaveURL(/\/products\/the-forma-tote$/);
+  await expect(page.locator('.cart-toast')).toContainText('Added to your bag');
+  await page.locator('.cart-toast').hover();
+  await expect(page.locator('.cart-toast')).toContainText('The Forma Tote');
+  await expect(page.locator('.cart-toast')).toContainText('Cognac');
+  await expect(page.getByRole('button', { name: 'Open bag, 1 items' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Added' })).toBeDisabled();
+
+  await page.locator('.cart-toast').getByRole('link', { name: 'View Bag' }).click();
+  await expect(page).toHaveURL(/\/cart$/);
 });
 test('collection filters are shareable and keyboard gallery works', async ({ page }) => {
   await page.goto('/collections?category=Totes&sort=price-desc');

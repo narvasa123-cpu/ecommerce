@@ -10,20 +10,29 @@ import {
 } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { X, Minus, Plus, ArrowRight, ShoppingBag } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { ArrowRight, Check, Minus, Plus, ShoppingBag, X } from 'lucide-react';
 import { api } from '@/lib/client';
 import { money } from '@/lib/pricing';
 import { salePrice } from '@/lib/commerce-tools';
 import type { getCart } from '@/lib/cart';
 export type CartData = Awaited<ReturnType<typeof getCart>>;
+type AddedToBag = {
+  name: string;
+  image: string;
+  variation: string;
+  quantity: number;
+};
 const StoreContext = createContext<{
   cart: CartData | null;
+  cartAddSequence: number;
   refresh: () => Promise<void>;
   replaceCart: (cart: CartData) => void;
   openBag: () => void;
   add: (id: string) => Promise<void>;
 }>({
   cart: null,
+  cartAddSequence: 0,
   refresh: async () => {},
   replaceCart: () => {},
   openBag: () => {},
@@ -31,11 +40,25 @@ const StoreContext = createContext<{
 });
 export const useStore = () => useContext(StoreContext);
 export function StoreProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
   const [cart, setCart] = useState<CartData | null>(null);
+  const [addedToBag, setAddedToBag] = useState<AddedToBag | null>(null);
+  const [toastHovered, setToastHovered] = useState(false);
+  const [toastFocused, setToastFocused] = useState(false);
+  const [cartAddSequence, setCartAddSequence] = useState(0);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const drawer = useRef<HTMLDialogElement>(null);
   const revision = useRef(0);
+  const mutationQueue = useRef<Promise<void>>(Promise.resolve());
+  const runMutation = useCallback(<T,>(action: () => Promise<T>) => {
+    const next = mutationQueue.current.then(action, action);
+    mutationQueue.current = next.then(
+      () => undefined,
+      () => undefined,
+    );
+    return next;
+  }, []);
   const replaceCart = useCallback((value: CartData) => {
     revision.current++;
     setCart(value);
@@ -52,28 +75,101 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+  useEffect(() => {
+    setAddedToBag(null);
+  }, [pathname]);
   const openBag = () => {
     setError('');
+    setAddedToBag(null);
     drawer.current?.showModal();
   };
-  const add = async (id: string) => {
-    replaceCart(await api<CartData>('cart/item', { variantId: id, quantity: 1, mode: 'add' }));
-    openBag();
+  const add = async (variantId: string) => {
+    const updated = await runMutation(() =>
+      api<CartData>('cart/item', { variantId, quantity: 1, mode: 'add' }),
+    );
+    replaceCart(updated);
+    const item = updated.items.find((cartItem) => cartItem.variantId === variantId);
+    if (item) {
+      setAddedToBag({
+        name: item.variant.product.name,
+        image: item.variant.product.images[0]?.url || '/images/tote.webp',
+        variation: [item.variant.color, item.variant.size].filter(Boolean).join(' / '),
+        quantity: item.quantity,
+      });
+      setToastHovered(false);
+      setToastFocused(false);
+      setCartAddSequence((sequence) => sequence + 1);
+    }
   };
   async function update(id: string, quantity: number) {
     setBusy(true);
     setError('');
     try {
-      replaceCart(await api<CartData>('cart/item', { variantId: id, quantity }));
+      replaceCart(await runMutation(() => api<CartData>('cart/item', { variantId: id, quantity })));
     } catch (e) {
       setError((e as Error).message);
     } finally {
       setBusy(false);
     }
   }
+  const toastPaused = toastHovered || toastFocused;
+  useEffect(() => {
+    if (!addedToBag || toastPaused) return;
+    const timer = window.setTimeout(() => setAddedToBag(null), 4000);
+    return () => window.clearTimeout(timer);
+  }, [addedToBag, toastPaused]);
   return (
-    <StoreContext.Provider value={{ cart, refresh, replaceCart, openBag, add }}>
+    <StoreContext.Provider value={{ cart, cartAddSequence, refresh, replaceCart, openBag, add }}>
       {children}
+      {addedToBag && (
+        <div
+          className="cart-toast"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          onPointerEnter={() => setToastHovered(true)}
+          onPointerLeave={() => setToastHovered(false)}
+          onFocusCapture={() => setToastFocused(true)}
+          onBlurCapture={(event) => {
+            if (!event.currentTarget.contains(event.relatedTarget as Node | null))
+              setToastFocused(false);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') setAddedToBag(null);
+          }}
+        >
+          <div className="cart-toast-heading">
+            <span className="cart-toast-check" aria-hidden="true">
+              <Check size={15} strokeWidth={2.2} />
+            </span>
+            <strong>Added to your bag</strong>
+            <button
+              className="cart-toast-close"
+              type="button"
+              aria-label="Dismiss notification"
+              onClick={() => setAddedToBag(null)}
+            >
+              <X size={17} aria-hidden="true" />
+            </button>
+          </div>
+          <div className="cart-toast-product">
+            <Image src={addedToBag.image} alt="" width={54} height={66} sizes="54px" />
+            <div className="cart-toast-product-copy">
+              <strong>{addedToBag.name}</strong>
+              <span>{addedToBag.variation}</span>
+              <span>Quantity in bag: {addedToBag.quantity}</span>
+            </div>
+          </div>
+          <div className="cart-toast-actions">
+            <Link className="button" href="/cart">
+              View Bag <ArrowRight size={15} aria-hidden="true" />
+            </Link>
+            <button className="cart-toast-continue" onClick={() => setAddedToBag(null)}>
+              Continue Shopping
+            </button>
+          </div>
+        </div>
+      )}
       <dialog
         ref={drawer}
         className="bag-drawer"

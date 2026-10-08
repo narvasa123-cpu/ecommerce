@@ -24,6 +24,8 @@ import {
   RotateCcw,
   Bell,
   Star,
+  Check,
+  LoaderCircle,
 } from 'lucide-react';
 import { api } from '@/lib/client';
 import { money } from '@/lib/pricing';
@@ -159,13 +161,20 @@ export function QuickAdd({
 }) {
   const { add } = useStore();
   const [busy, setBusy] = useState(false);
+  const [added, setAdded] = useState(false);
   const [error, setError] = useState('');
+  useEffect(() => {
+    if (!added) return;
+    const timer = window.setTimeout(() => setAdded(false), 1400);
+    return () => window.clearTimeout(timer);
+  }, [added]);
   async function addToCart() {
     if (!variantId || disabled) return;
     setBusy(true);
     setError('');
     try {
       await add(variantId);
+      setAdded(true);
     } catch (error) {
       setError((error as Error).message);
     } finally {
@@ -176,22 +185,32 @@ export function QuickAdd({
     <>
       <button
         type="button"
-        className={'button quick-add' + (compact ? ' quick-add--compact' : '')}
-        disabled={!variantId || disabled || busy}
+        className={
+          'button quick-add' +
+          (compact ? ' quick-add--compact' : '') +
+          (added ? ' quick-add--success' : '')
+        }
+        disabled={!variantId || disabled || busy || added}
         aria-label={
           disabled
             ? `${productName || 'This piece'} is sold out`
-            : `${busy ? 'Adding' : 'Add'} ${productName || 'piece'} to cart`
+            : added
+              ? `${productName || 'This piece'} added to your bag`
+              : `${busy ? 'Adding' : 'Add'} ${productName || 'piece'} to your bag`
         }
         onClick={addToCart}
       >
-        {compact ? (
+        {busy ? (
+          <LoaderCircle className="add-spinner" size={16} aria-hidden="true" />
+        ) : added ? (
+          <Check size={16} aria-hidden="true" />
+        ) : compact ? (
           <Plus size={17} aria-hidden="true" />
         ) : (
           <ShoppingBag size={16} aria-hidden="true" />
         )}
         <span className={compact ? 'sr-only' : undefined}>
-          {busy ? 'Adding…' : disabled ? 'Sold out' : 'Add to cart'}
+          {busy ? 'Adding…' : added ? 'Added ✓' : disabled ? 'Sold out' : 'Add to cart'}
         </span>
       </button>
       {error && (
