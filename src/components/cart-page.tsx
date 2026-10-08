@@ -44,7 +44,8 @@ export function Totals({ totals }: { totals: CartData['totals'] }) {
     </div>
   );
 }
-export function PromoForm({ cart, refresh }: { cart: CartData; refresh: () => Promise<void> }) {
+export function PromoForm({ cart }: { cart: CartData; refresh: () => Promise<void> }) {
+  const { replaceCart } = useStore();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   async function submit(e: FormEvent<HTMLFormElement>) {
@@ -52,8 +53,9 @@ export function PromoForm({ cart, refresh }: { cart: CartData; refresh: () => Pr
     setBusy(true);
     setMessage('');
     try {
-      await api('cart/promo', { code: new FormData(e.currentTarget).get('code') });
-      await refresh();
+      replaceCart(
+        await api<CartData>('cart/promo', { code: new FormData(e.currentTarget).get('code') }),
+      );
     } catch (e) {
       setMessage((e as Error).message);
     } finally {
@@ -63,8 +65,7 @@ export function PromoForm({ cart, refresh }: { cart: CartData; refresh: () => Pr
   async function remove() {
     setBusy(true);
     try {
-      await api('cart/promo', { code: '' });
-      await refresh();
+      replaceCart(await api<CartData>('cart/promo', { code: '' }));
     } catch (e) {
       setMessage((e as Error).message);
     } finally {
@@ -103,15 +104,14 @@ export function PromoForm({ cart, refresh }: { cart: CartData; refresh: () => Pr
   );
 }
 export function CartPage() {
-  const { cart, refresh } = useStore();
+  const { cart, refresh, replaceCart } = useStore();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   async function update(id: string, q: number) {
     setBusy(true);
     setError('');
     try {
-      await api('cart/item', { variantId: id, quantity: q });
-      await refresh();
+      replaceCart(await api<CartData>('cart/item', { variantId: id, quantity: q }));
     } catch (e) {
       setError((e as Error).message);
     } finally {

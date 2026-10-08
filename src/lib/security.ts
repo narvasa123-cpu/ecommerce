@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { randomBytes, createHash, timingSafeEqual } from 'node:crypto';
 import { db } from './db';
-import { transactionLock } from './transaction-lock';
+import { cache } from 'react';
 export class HttpError extends Error {
   constructor(
     message: string,
@@ -35,7 +35,7 @@ export const cookieOptions = {
   sameSite: 'lax' as const,
   path: '/',
 };
-export async function currentUser() {
+export const currentUser = cache(async () => {
   const raw = (await cookies()).get('orven_session')?.value;
   if (!raw) return null;
   const s = await db.session.findUnique({ where: { id: digest(raw) }, include: { user: true } });
@@ -43,7 +43,7 @@ export async function currentUser() {
   const { passwordHash: _, ...user } = s.user;
   void _;
   return user;
-}
+});
 export async function requireAdmin() {
   const u = await currentUser();
   if (!u || u.role !== 'ADMIN') throw new HttpError('Administrator access is required.', 403);
@@ -85,19 +85,17 @@ export async function csrfGuard(request: Request) {
     throw new HttpError('Your session changed. Reload the page and try again.', 403);
 }
 export async function rateLimit(key: string, limit = 10, windowMs = 60000) {
-  await db.$transaction(async (tx) => {
-    await transactionLock(tx, `rate:${key}`);
-    const now = new Date();
-    const row = await tx.rateLimit.findUnique({ where: { id: key } });
-    if (!row || row.resetAt < now) {
-      await tx.rateLimit.upsert({
-        where: { id: key },
-        update: { count: 1, resetAt: new Date(Date.now() + windowMs) },
-        create: { id: key, count: 1, resetAt: new Date(Date.now() + windowMs) },
-      });
-      return;
-    }
-    if (row.count >= limit) throw new HttpError('Please wait a minute before trying again.', 429);
-    await tx.rateLimit.update({ where: { id: key }, data: { count: { increment: 1 } } });
-  });
+  const now = new Date();
+  const resetAt = new Date(now.getTime() + windowMs);
+  // ON CONFLICT serializes this counter atomically, without a multi-query transaction.
+  const [row] = await db.$queryRaw<{ count: number }[]>`
+    INSERT INTO "RateLimit" ("id", "count", "resetAt") VALUES (${key}, 1, ${resetAt})
+    ON CONFLICT ("id") DO UPDATE SET
+      "count" = CASE WHEN "RateLimit"."resetAt" < ${now} THEN 1
+        ELSE LEAST("RateLimit"."count"::bigint + 1, 2147483647)::integer END,
+      "resetAt" = CASE WHEN "RateLimit"."resetAt" < ${now} THEN ${resetAt}
+        ELSE "RateLimit"."resetAt" END
+    RETURNING "count"
+  `;
+  if (row.count > limit) throw new HttpError('Please wait a minute before trying again.', 429);
 }

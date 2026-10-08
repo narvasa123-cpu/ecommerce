@@ -53,17 +53,22 @@ export function Checkout({
     key.current = crypto.randomUUID();
   }, []);
   useEffect(() => {
-    let active = true;
+    if (!cart) return;
+    const controller = new AbortController();
     setQuote(null);
-    api<CartData>('cart?country=' + address.country + '&delivery=' + delivery)
+    api<CartData>(
+      'cart?country=' + address.country + '&delivery=' + delivery,
+      undefined,
+      controller.signal,
+    )
       .then((r) => {
-        if (active) setQuote(r);
+        if (!controller.signal.aborted) setQuote(r);
       })
       .catch((e) => {
-        if (active) setError(e.message);
+        if (!controller.signal.aborted) setError(e.message);
       });
     return () => {
-      active = false;
+      controller.abort();
     };
   }, [address.country, delivery, cart]);
   const setField = (name: keyof Address, value: string) =>

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { cache } from 'react';
+import { cache, Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { db } from '@/lib/db';
@@ -28,11 +28,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ProductPage({ params }: Props) {
   const p = await loadProduct((await params).slug);
   if (!p?.active) notFound();
-  const related = await db.product.findMany({
-    where: { active: true, collectionId: p.collectionId, id: { not: p.id } },
-    include: productInclude,
-    take: 4,
-  });
   const stock = p.variants.reduce((s, v) => s + (v.inventory?.quantity || 0), 0);
   const ld = {
     '@context': 'https://schema.org',
@@ -50,22 +45,6 @@ export default async function ProductPage({ params }: Props) {
       url: appUrl() + '/products/' + p.slug,
     },
   };
-  const reviewWhere = { productId: p.id };
-  const [reviews, reviewCount, ratingStats] = await Promise.all([
-    db.review.findMany({
-      where: reviewWhere,
-      orderBy: { createdAt: 'desc' },
-      take: 30,
-      include: {
-        user: { select: { name: true } },
-        order: { select: { payment: { select: { provider: true } } } },
-      },
-    }),
-    db.review.count({ where: reviewWhere }),
-    db.review.aggregate({ where: reviewWhere, _avg: { rating: true } }),
-  ]);
-  const averageRating = ratingStats._avg.rating;
-  const roundedAverage = Math.round(averageRating || 0);
   return (
     <>
       <div className="page-container">
@@ -81,70 +60,116 @@ export default async function ProductPage({ params }: Props) {
           <span>{p.name}</span>
         </div>
         <ProductDetail product={p} />
-        <section className="product-reviews" aria-labelledby="reviews-title">
-          <div className="review-heading">
-            <div>
-              <p className="eyebrow">PUBLIC CUSTOMER REVIEWS</p>
-              <h2 id="reviews-title">Reviews and ratings.</h2>
-              <p className="muted">Everyone can read customer comments and ratings.</p>
-            </div>
-            {reviewCount > 0 && averageRating !== null && (
-              <div className="review-summary">
-                <span
-                  className="review-stars"
-                  role="img"
-                  aria-label={`Average rating ${averageRating.toFixed(1)} out of 5`}
-                >
-                  {String.fromCharCode(9733).repeat(roundedAverage)}
-                  {String.fromCharCode(9734).repeat(5 - roundedAverage)}
+        <Suspense
+          fallback={
+            <p className="muted" role="status">
+              Loading reviews...
+            </p>
+          }
+        >
+          <ProductReviews productId={p.id} />
+        </Suspense>
+      </div>
+      <Suspense fallback={null}>
+        <RelatedProducts productId={p.id} collectionId={p.collectionId} />
+      </Suspense>
+    </>
+  );
+}
+
+async function ProductReviews({ productId }: { productId: string }) {
+  const reviewWhere = { productId };
+  const [reviews, ratingStats] = await Promise.all([
+    db.review.findMany({
+      where: reviewWhere,
+      orderBy: { createdAt: 'desc' },
+      take: 30,
+      include: {
+        user: { select: { name: true } },
+        order: { select: { payment: { select: { provider: true } } } },
+      },
+    }),
+    db.review.aggregate({ where: reviewWhere, _avg: { rating: true }, _count: true }),
+  ]);
+  const reviewCount = ratingStats._count;
+  const averageRating = ratingStats._avg.rating;
+  const roundedAverage = Math.round(averageRating || 0);
+  return (
+    <section className="product-reviews" aria-labelledby="reviews-title">
+      <div className="review-heading">
+        <div>
+          <p className="eyebrow">PUBLIC CUSTOMER REVIEWS</p>
+          <h2 id="reviews-title">Reviews and ratings.</h2>
+          <p className="muted">Everyone can read customer comments and ratings.</p>
+        </div>
+        {reviewCount > 0 && averageRating !== null && (
+          <div className="review-summary">
+            <span
+              className="review-stars"
+              role="img"
+              aria-label={`Average rating ${averageRating.toFixed(1)} out of 5`}
+            >
+              {String.fromCharCode(9733).repeat(roundedAverage)}
+              {String.fromCharCode(9734).repeat(5 - roundedAverage)}
+            </span>
+            <strong>{averageRating.toFixed(1)} / 5</strong>
+            <span className="muted">
+              {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
+            </span>
+          </div>
+        )}
+      </div>
+      {reviews.length ? (
+        <>
+          {reviews.map((r) => (
+            <article className="review-card" key={r.id}>
+              <strong>{r.user.name.split(' ')[0]}</strong>
+              <div className="review-meta">
+                <span className="review-stars" role="img" aria-label={`${r.rating} out of 5 stars`}>
+                  {String.fromCharCode(9733).repeat(r.rating)}
+                  {String.fromCharCode(9734).repeat(5 - r.rating)}
                 </span>
-                <strong>{averageRating.toFixed(1)} / 5</strong>
+                <span>{r.rating}/5</span>
                 <span className="muted">
-                  {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
+                  Verified {r.order.payment?.provider === 'sandbox' ? 'simulated' : 'test'} purchase
                 </span>
               </div>
-            )}
-          </div>
-          {reviews.length ? (
-            <>
-              {reviews.map((r) => (
-                <article className="review-card" key={r.id}>
-                  <strong>{r.user.name.split(' ')[0]}</strong>
-                  <div className="review-meta">
-                    <span
-                      className="review-stars"
-                      role="img"
-                      aria-label={`${r.rating} out of 5 stars`}
-                    >
-                      {String.fromCharCode(9733).repeat(r.rating)}
-                      {String.fromCharCode(9734).repeat(5 - r.rating)}
-                    </span>
-                    <span>{r.rating}/5</span>
-                    <span className="muted">
-                      Verified {r.order.payment?.provider === 'sandbox' ? 'simulated' : 'test'}{' '}
-                      purchase
-                    </span>
-                  </div>
-                  <p>{r.body}</p>
-                  <time dateTime={r.createdAt.toISOString()} className="small muted">
-                    {r.createdAt.toLocaleDateString('en-PH')}
-                  </time>
-                </article>
-              ))}
-              {reviewCount > reviews.length && (
-                <p className="small muted">
-                  Showing the latest {reviews.length} of {reviewCount} reviews.
-                </p>
-              )}
-            </>
-          ) : (
-            <p className="muted">
-              No reviews yet. Be the first to share your experience after a delivered purchase.
+              <p>{r.body}</p>
+              <time dateTime={r.createdAt.toISOString()} className="small muted">
+                {r.createdAt.toLocaleDateString('en-PH')}
+              </time>
+            </article>
+          ))}
+          {reviewCount > reviews.length && (
+            <p className="small muted">
+              Showing the latest {reviews.length} of {reviewCount} reviews.
             </p>
           )}
-          <ReviewForm productId={p.id} />
-        </section>
-      </div>
+        </>
+      ) : (
+        <p className="muted">
+          No reviews yet. Be the first to share your experience after a delivered purchase.
+        </p>
+      )}
+      <ReviewForm productId={productId} />
+    </section>
+  );
+}
+
+async function RelatedProducts({
+  productId,
+  collectionId,
+}: {
+  productId: string;
+  collectionId: string;
+}) {
+  const related = await db.product.findMany({
+    where: { active: true, collectionId: collectionId, id: { not: productId } },
+    include: productInclude,
+    take: 4,
+  });
+  return (
+    <>
       {related.length > 0 && (
         <section className="section" style={{ paddingTop: 0 }}>
           <div className="section-heading">

@@ -19,18 +19,32 @@ export type CartData = Awaited<ReturnType<typeof getCart>>;
 const StoreContext = createContext<{
   cart: CartData | null;
   refresh: () => Promise<void>;
+  replaceCart: (cart: CartData) => void;
   openBag: () => void;
   add: (id: string) => Promise<void>;
-}>({ cart: null, refresh: async () => {}, openBag: () => {}, add: async () => {} });
+}>({
+  cart: null,
+  refresh: async () => {},
+  replaceCart: () => {},
+  openBag: () => {},
+  add: async () => {},
+});
 export const useStore = () => useContext(StoreContext);
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [cart, setCart] = useState<CartData | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const drawer = useRef<HTMLDialogElement>(null);
+  const revision = useRef(0);
+  const replaceCart = useCallback((value: CartData) => {
+    revision.current++;
+    setCart(value);
+  }, []);
   const refresh = useCallback(async () => {
+    const startedAt = revision.current;
     try {
-      setCart(await api<CartData>('cart'));
+      const value = await api<CartData>('cart');
+      if (revision.current === startedAt) setCart(value);
     } catch (e) {
       setError((e as Error).message);
     }
@@ -43,14 +57,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     drawer.current?.showModal();
   };
   const add = async (id: string) => {
-    setCart(await api<CartData>('cart/item', { variantId: id, quantity: 1, mode: 'add' }));
+    replaceCart(await api<CartData>('cart/item', { variantId: id, quantity: 1, mode: 'add' }));
     openBag();
   };
   async function update(id: string, quantity: number) {
     setBusy(true);
     setError('');
     try {
-      setCart(await api<CartData>('cart/item', { variantId: id, quantity }));
+      replaceCart(await api<CartData>('cart/item', { variantId: id, quantity }));
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -58,7 +72,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }
   return (
-    <StoreContext.Provider value={{ cart, refresh, openBag, add }}>
+    <StoreContext.Provider value={{ cart, refresh, replaceCart, openBag, add }}>
       {children}
       <dialog
         ref={drawer}

@@ -17,3 +17,7 @@ services:
         sync: false
       - key: PAYMENT_MODE
         value: sandbox
+      - key: ORVEN_RUNTIME
+        value: node
+      - key: CLOUDFLARE_BUILD
+        value: '0'

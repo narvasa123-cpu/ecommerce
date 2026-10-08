@@ -3,7 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Search, ArrowRight } from 'lucide-react';
 import { db } from '@/lib/db';
-import { productInclude } from '@/lib/catalog';
+import { getCollections, productInclude } from '@/lib/catalog';
 import { ProductCard } from '@/components/product-card';
 import { SearchSuggestions } from '@/components/customer-tools';
 import type { Prisma } from '@prisma/client';
@@ -13,14 +13,12 @@ export const metadata: Metadata = {
   description:
     'Explore considered totes, shoulder bags and small leather goods in the ORVEN concept collection.',
 };
-export const dynamic = 'force-dynamic';
 export default async function Collections({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const query = await searchParams;
-  const collections = await db.collection.findMany();
   const where: Prisma.ProductWhereInput = { active: true };
   if (query.q) where.OR = [{ name: { contains: query.q } }, { description: { contains: query.q } }];
   if (query.category)
@@ -34,10 +32,11 @@ export default async function Collections({
     >`SELECT "id" FROM "Product" WHERE ROUND("price"::numeric * (100 - "salePercent") / 100) <= ${fromPhpAmount(max)}`;
     where.id = { in: matches.map((p) => p.id) };
   }
-  const count = await db.product.count({ where });
-  const pages = Math.max(1, Math.ceil(count / 12));
   const rawPage = Number(query.page);
-  const page = Math.min(pages, Math.max(1, Number.isFinite(rawPage) ? Math.floor(rawPage) : 1));
+  const requestedPage = Math.max(
+    1,
+    Number.isFinite(rawPage) ? Math.min(100000, Math.floor(rawPage)) : 1,
+  );
   const orderBy: Prisma.ProductOrderByWithRelationInput =
     query.sort === 'price-asc'
       ? { price: 'asc' }
@@ -46,13 +45,22 @@ export default async function Collections({
         : query.sort === 'name'
           ? { name: 'asc' }
           : { createdAt: 'asc' };
-  const products = await db.product.findMany({
-    where,
-    include: productInclude,
-    orderBy,
-    take: 12,
-    skip: (page - 1) * 12,
-  });
+  const list = (page: number) =>
+    db.product.findMany({
+      where,
+      include: productInclude,
+      orderBy,
+      take: 12,
+      skip: (page - 1) * 12,
+    });
+  const [collections, count, requestedProducts] = await Promise.all([
+    getCollections(),
+    db.product.count({ where }),
+    list(requestedPage),
+  ]);
+  const pages = Math.max(1, Math.ceil(count / 12));
+  const page = Math.min(pages, requestedPage);
+  const products = page === requestedPage ? requestedProducts : await list(page);
   const current = collections.find((c) => c.slug === query.collection);
   const hasActiveFilters = Boolean(
     query.q || query.category || query.collection || query.material || query.max || query.sort,

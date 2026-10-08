@@ -17,11 +17,20 @@ export const metadata: Metadata = {
   referrer: 'no-referrer',
 };
 export default async function Page({ params }: { params: Promise<{ token: string }> }) {
-  await releaseExpired();
-  const order = await db.order.findUnique({
-    where: { accessToken: (await params).token },
+  const accessToken = (await params).token;
+  const query = {
+    where: { accessToken },
     include: { items: true, payment: true, shipment: true },
-  });
+  } as const;
+  let order = await db.order.findUnique(query);
+  if (
+    order?.status === 'PENDING' &&
+    order.reservationExpiresAt &&
+    order.reservationExpiresAt <= new Date()
+  ) {
+    await releaseExpired(order.cartId);
+    order = await db.order.findUnique(query);
+  }
   if (!order) notFound();
   const a = JSON.parse(order.shippingAddress);
   const sandbox = order.payment?.provider === 'sandbox';
@@ -29,7 +38,14 @@ export default async function Page({ params }: { params: Promise<{ token: string
   const cancelled = order.status === 'CANCELLED';
   const stage = orderStage(order.status);
   const user = await currentUser();
-  const events = await db.auditLog.findMany({ where: { entityId: order.id, action: { in: ['ORDER_RESERVED', 'ORDER_PAID', 'ORDER_UPDATED'] } }, orderBy: { createdAt: 'asc' }, take: 100 });
+  const events = await db.auditLog.findMany({
+    where: {
+      entityId: order.id,
+      action: { in: ['ORDER_RESERVED', 'ORDER_PAID', 'ORDER_UPDATED'] },
+    },
+    orderBy: { createdAt: 'asc' },
+    take: 100,
+  });
   const ownsCart = order.cartId === (await cartId());
   return (
     <div className="page-container">
@@ -72,19 +88,37 @@ export default async function Page({ params }: { params: Promise<{ token: string
         {!cancelled && (
           <div className="order-status">
             {orderStages.map((s, i) => (
-              <div className={i <= stage ? 'complete' : ''} key={s.status} aria-current={i === stage ? 'step' : undefined}>
+              <div
+                className={i <= stage ? 'complete' : ''}
+                key={s.status}
+                aria-current={i === stage ? 'step' : undefined}
+              >
                 {i + 1}. {s.label}
-                <p className="small">{(() => {
-                  const event = s.status === 'PENDING' ? { createdAt: order.createdAt } : events.find(e =>
-                    s.status === 'PAID' ? e.action === 'ORDER_PAID' : e.action === 'ORDER_UPDATED' && e.detail.includes('→ ' + s.status));
-                  return event ? event.createdAt.toLocaleString('en-PH', { timeZone: 'Asia/Manila' }) : i <= stage ? 'Date not separately recorded' : 'Upcoming';
-                })()}</p>
+                <p className="small">
+                  {(() => {
+                    const event =
+                      s.status === 'PENDING'
+                        ? { createdAt: order.createdAt }
+                        : events.find((e) =>
+                            s.status === 'PAID'
+                              ? e.action === 'ORDER_PAID'
+                              : e.action === 'ORDER_UPDATED' && e.detail.includes('→ ' + s.status),
+                          );
+                    return event
+                      ? event.createdAt.toLocaleString('en-PH', { timeZone: 'Asia/Manila' })
+                      : i <= stage
+                        ? 'Date not separately recorded'
+                        : 'Upcoming';
+                  })()}
+                </p>
               </div>
             ))}
           </div>
         )}
         {pending && ownsCart && <OrderControls token={order.accessToken} sandbox={sandbox} />}
-        {user?.id === order.userId && order.payment?.status === 'PAID' && <Reorder orderId={order.id} />}
+        {user?.id === order.userId && order.payment?.status === 'PAID' && (
+          <Reorder orderId={order.id} />
+        )}
         <div className="summary-box" style={{ marginTop: 30 }}>
           <h2>Your considered selection.</h2>
           <div className="review-items">

@@ -5,6 +5,7 @@ import {
   useEffect,
   useRef,
   useState,
+  useCallback,
   type ReactNode,
   type KeyboardEvent,
   type FormEvent,
@@ -26,7 +27,7 @@ import {
 import { api } from '@/lib/client';
 import { money } from '@/lib/pricing';
 import { salePrice } from '@/lib/commerce-tools';
-import { useStore } from './store-provider';
+import { useStore, type CartData } from './store-provider';
 export type ToolProduct = {
   id: string;
   slug: string;
@@ -37,35 +38,57 @@ export type ToolProduct = {
   active?: boolean;
 };
 type Favorite = { productId: string; savedPrice: number; product: ToolProduct };
-const CustomerContext = createContext<{ favorites: Favorite[]; refresh: () => Promise<void> }>({
+const CustomerContext = createContext<{
+  favorites: Favorite[];
+  refresh: () => Promise<void>;
+  updateFavorite: (productId: string, favorite?: Favorite) => void;
+}>({
   favorites: [],
   refresh: async () => {},
+  updateFavorite: () => {},
 });
 export function CustomerToolsProvider({ children }: { children: ReactNode }) {
   const [favorites, setFavorites] = useState<Favorite[]>([]);
-  const path = usePathname();
-  async function refresh() {
+  const revision = useRef(0);
+  const updateFavorite = useCallback((productId: string, favorite?: Favorite) => {
+    revision.current++;
+    setFavorites((current) => {
+      const remaining = current.filter((item) => item.productId !== productId);
+      return favorite ? [favorite, ...remaining] : remaining;
+    });
+  }, []);
+  const refresh = useCallback(async () => {
+    const startedAt = ++revision.current;
     try {
-      setFavorites(await api<Favorite[]>('features/wishlist'));
+      const data = await api<Favorite[]>('features/wishlist');
+      if (revision.current === startedAt) setFavorites(data);
     } catch {
-      setFavorites([]);
+      if (revision.current === startedAt) setFavorites([]);
     }
-  }
+  }, []);
   useEffect(() => {
     let alive = true;
-    api<Favorite[]>('features/wishlist')
-      .then((data) => {
-        if (alive) setFavorites(data);
-      })
-      .catch(() => {
-        if (alive) setFavorites([]);
-      });
+    const load = () => {
+      const startedAt = ++revision.current;
+      return api<Favorite[]>('features/wishlist')
+        .then((data) => {
+          if (alive && revision.current === startedAt) setFavorites(data);
+        })
+        .catch(() => {
+          if (alive && revision.current === startedAt) setFavorites([]);
+        });
+    };
+    void load();
+    window.addEventListener('orven-auth-changed', load);
     return () => {
       alive = false;
+      window.removeEventListener('orven-auth-changed', load);
     };
-  }, [path]);
+  }, []);
   return (
-    <CustomerContext.Provider value={{ favorites, refresh }}>{children}</CustomerContext.Provider>
+    <CustomerContext.Provider value={{ favorites, refresh, updateFavorite }}>
+      {children}
+    </CustomerContext.Provider>
   );
 }
 export function ProductPrice({ product }: { product: { price: number; salePercent?: number } }) {
@@ -82,7 +105,7 @@ export function ProductPrice({ product }: { product: { price: number; salePercen
   );
 }
 export function SaveProduct({ productId }: { productId: string }) {
-  const { favorites, refresh } = useContext(CustomerContext);
+  const { favorites, updateFavorite } = useContext(CustomerContext);
   const [busy, setBusy] = useState(false),
     [error, setError] = useState('');
   const saved = favorites.some((f) => f.productId === productId);
@@ -90,8 +113,11 @@ export function SaveProduct({ productId }: { productId: string }) {
     setBusy(true);
     setError('');
     try {
-      await api('features/wishlist', { productId, saved: !saved });
-      await refresh();
+      const result = await api<{ saved: boolean; favorite?: Favorite }>('features/wishlist', {
+        productId,
+        saved: !saved,
+      });
+      updateFavorite(productId, result.favorite);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -171,7 +197,7 @@ export function SearchSuggestions({
   const root = useRef<HTMLDivElement>(null),
     input = useRef<HTMLInputElement>(null);
   useEffect(() => {
-    if (q.trim().length < 2) return;
+    if (!open || q.trim().length < 2) return;
     const controller = new AbortController();
     const timer = setTimeout(() => {
       setLoading(true);
@@ -202,7 +228,7 @@ export function SearchSuggestions({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [q]);
+  }, [q, open]);
   function keys(e: KeyboardEvent) {
     const links = [
       ...(root.current?.querySelectorAll<HTMLAnchorElement>('.search-results a') || []),
@@ -301,10 +327,13 @@ export function PieceList({ products }: { products: ToolProduct[] }) {
 }
 export function RecentPieces() {
   const path = usePathname();
+  const visible = path === '/' || path === '/collections' || path.startsWith('/products/');
   const [products, setProducts] = useState<ToolProduct[]>([]);
   const [cleared, setCleared] = useState(false);
   useEffect(() => {
+    if (!visible) return;
     let alive = true;
+    const controller = new AbortController();
     try {
       const raw: unknown = JSON.parse(localStorage.getItem('orven-recent') || '[]');
       let slugs = Array.isArray(raw)
@@ -317,8 +346,16 @@ export function RecentPieces() {
         slugs = [slug, ...slugs.filter((s) => s !== slug)].slice(0, 12);
         localStorage.setItem('orven-recent', JSON.stringify(slugs));
       }
-      const others = slugs.filter((s) => s !== slug);
-      api<ToolProduct[]>('features/recent?slugs=' + encodeURIComponent(others.join(',')))
+      const others = slugs.filter((s) => s !== slug).slice(0, 4);
+      if (!others.length) {
+        setProducts([]);
+        return;
+      }
+      api<ToolProduct[]>(
+        'features/recent?slugs=' + encodeURIComponent(others.join(',')),
+        undefined,
+        controller.signal,
+      )
         .then((data) => {
           if (alive) {
             setProducts(
@@ -336,8 +373,9 @@ export function RecentPieces() {
     }
     return () => {
       alive = false;
+      controller.abort();
     };
-  }, [path]);
+  }, [path, visible]);
   if (
     !products.length ||
     cleared ||
@@ -413,7 +451,7 @@ export { CopyReference } from './copy-reference';
 export function Reorder({ orderId }: { orderId: string }) {
   const [busy, setBusy] = useState(false),
     [error, setError] = useState('');
-  const { refresh } = useStore(),
+  const { replaceCart } = useStore(),
     router = useRouter();
   return (
     <span>
@@ -424,8 +462,7 @@ export function Reorder({ orderId }: { orderId: string }) {
           setBusy(true);
           setError('');
           try {
-            await api('features/reorder', { orderId });
-            await refresh();
+            replaceCart(await api<CartData>('features/reorder', { orderId }));
             router.push('/cart');
           } catch (e) {
             setError((e as Error).message);

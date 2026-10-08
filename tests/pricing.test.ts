@@ -20,9 +20,9 @@ const valid = {
 };
 describe('Server pricing in integer cents', () => {
   it('formats the displayed free-shipping threshold from the same value used at checkout', () => {
-    expect(FREE_STANDARD_SHIPPING_THRESHOLD).toBe(25000);
-    expect(FREE_STANDARD_SHIPPING_THRESHOLD_LABEL).toBe('₱15,661.75');
-    expect(money(FREE_STANDARD_SHIPPING_THRESHOLD)).toBe(FREE_STANDARD_SHIPPING_THRESHOLD_LABEL);
+    expect(FREE_STANDARD_SHIPPING_THRESHOLD).toBe(799);
+    expect(FREE_STANDARD_SHIPPING_THRESHOLD_LABEL).toBe('₱500.00');
+    expect(toPhpMinor(FREE_STANDARD_SHIPPING_THRESHOLD)).toBeGreaterThanOrEqual(50000);
   });
   it('converts dollars to pesos rather than relabelling the amount', () => {
     expect(toPhpMinor(20000)).toBe(1252940);
@@ -49,9 +49,9 @@ describe('Server pricing in integer cents', () => {
     expect(priceOrder([{ price: 25000, quantity: 1 }], 'PH', 'standard', valid)).toEqual({
       subtotal: 25000,
       discount: 2500,
-      shipping: 1200,
+      shipping: 0,
       tax: 2700,
-      total: 26400,
+      total: 25200,
     });
     expect(priceOrder([{ price: 25000, quantity: 1 }], 'PH').shipping).toBe(0);
     expect(priceOrder([{ price: 25000, quantity: 1 }], 'PH', 'express').shipping).toBe(2500);
@@ -69,9 +69,9 @@ describe('Server pricing in integer cents', () => {
     expect(priceOrder([{ price: 25000, quantity: 1 }], 'US', 'standard', valid)).toEqual({
       subtotal: 25000,
       discount: 2500,
-      shipping: 1200,
+      shipping: 0,
       tax: 1800,
-      total: 25500,
+      total: 24300,
     });
   });
   it('caps fixed discounts at the subtotal', () => {

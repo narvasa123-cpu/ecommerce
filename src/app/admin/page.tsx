@@ -42,7 +42,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
     }),
     db.supportMessage.count(),
   ]);
-  const [paid, count, customers, low, fulfillment, recent, activity] = await Promise.all([
+  const [paid, low, fulfillment, recent, activity] = await Promise.all([
     db.order.findMany({
       where: { createdAt: period, payment: { status: 'PAID' } },
       select: {
@@ -55,8 +55,6 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
         },
       },
     }),
-    db.order.count({ where: { createdAt: period } }),
-    db.user.count({ where: { role: 'CUSTOMER', createdAt: period } }),
     db.inventory.count({ where: { quantity: { lte: 3 }, variant: { product: { active: true } } } }),
     db.order.count({
       where: { status: { in: ['PAID', 'PROCESSING'] }, payment: { status: 'PAID' } },
@@ -91,27 +89,38 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       },
     }),
   ]);
+  const count = statusGroups.reduce((sum, group) => sum + group._count, 0);
+  const customers = customerDates.length;
   const breakdown = salesBreakdowns(paid, new Map(variants.map((v) => [v.id, v.product.category])));
   const abandonment = cartAbandonment(cartEvents, paid, new Date());
   const revenue = paid.reduce((sum, o) => sum + o.total, 0);
+  const revenueByDay = new Map<string, number>();
+  for (const order of paid) {
+    const day = order.createdAt.toISOString().slice(0, 10);
+    revenueByDay.set(day, (revenueByDay.get(day) || 0) + order.total);
+  }
+  const customersByDay = new Map<string, number>();
+  for (const customer of customerDates) {
+    const day = customer.createdAt.toISOString().slice(0, 10);
+    customersByDay.set(day, (customersByDay.get(day) || 0) + 1);
+  }
   const buckets = Array.from({ length: days }, (_, i) => {
     const date = new Date(since);
     date.setUTCDate(date.getUTCDate() + i);
     return {
       date,
-      value: paid
-        .filter((o) => o.createdAt.toISOString().slice(0, 10) === date.toISOString().slice(0, 10))
-        .reduce((s, o) => s + o.total, 0),
+      value: revenueByDay.get(date.toISOString().slice(0, 10)) || 0,
     };
   });
   const compare = (current: number, previous: number) =>
     previous > 0
       ? `${current >= previous ? '+' : ''}${(((current - previous) / previous) * 100).toFixed(1)}%`
       : null;
-  const growthPoints = buckets.map((b) => ({
-    date: dateLabel(b.date),
-    value: customerDates.filter((c) => c.createdAt < new Date(b.date.getTime() + 86400000)).length,
-  }));
+  let cumulativeCustomers = 0;
+  const growthPoints = buckets.map((b) => {
+    cumulativeCustomers += customersByDay.get(b.date.toISOString().slice(0, 10)) || 0;
+    return { date: dateLabel(b.date), value: cumulativeCustomers };
+  });
   return (
     <div className="a-overview">
       <section className="a-welcome-hero" aria-labelledby="admin-welcome-title">

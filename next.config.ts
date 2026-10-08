@@ -2,8 +2,6 @@ import type { NextConfig } from 'next';
 const config: NextConfig = {
   serverExternalPackages: ['@prisma/client', '.prisma/client'],
   images: { unoptimized: process.env.CLOUDFLARE_BUILD === '1' },
-  // Keep product metadata in the document head for crawlers and sharing clients.
-  htmlLimitedBots: /.*/,
   turbopack: { root: process.cwd() },
   async headers() {
     return [

@@ -1,6 +1,6 @@
 # ORVEN
 
-A complete e-commerce concept for considered leather goods, hosted on Cloudflare Workers with Supabase PostgreSQL. Built with Next.js App Router, TypeScript, Tailwind CSS, Prisma, Zod, bcrypt sessions, and Stripe **test mode only**. The identity, catalogue, copy and imagery are original fictional concepts.
+A complete e-commerce concept for considered leather goods, hosted on Render with Supabase PostgreSQL. Built with Next.js App Router, TypeScript, Tailwind CSS, Prisma, Zod, bcrypt sessions, and Stripe **test mode only**. The identity, catalogue, copy and imagery are original fictional concepts.
 
 ## Run locally
 
@@ -29,9 +29,19 @@ The PostgreSQL initial migration is in `prisma/migrations/20261006000000_supabas
 
 For an existing SQLite catalogue, point `DATABASE_URL` and `DIRECT_URL` at a new empty PostgreSQL destination, run `npm run db:generate` and `npm run db:migrate`, then run `npm run db:import-sqlite` **instead of seeding**. The script reads `prisma/dev.db` without modifying it, preserves IDs, converts timestamps and booleans, and imports every application table in one transaction. It refuses a populated destination. A different SQLite source path can be passed after `--`. Verify the transfer before changing the running site's connection. Schema migration and this data transfer are separate operations.
 
-PostgreSQL checkout, cancellation, payment confirmation and rate-limit operations use transaction-scoped advisory locks to retain idempotency under concurrent requests. Inventory and promotion decrements also use conditional atomic updates. Integration tests exercise concurrent checkout retries, competing carts, cancellation replay and payment replay.
+PostgreSQL checkout, cancellation and payment confirmation use transaction-scoped advisory locks to retain idempotency under concurrent requests. Rate limits use atomic PostgreSQL counter upserts. Inventory and promotion decrements also use conditional atomic updates. Integration tests exercise concurrent checkout retries, competing carts, cancellation replay and payment replay.
 
-## Cloudflare Workers
+## Render performance
+
+The active hosting target is a Render Node web service. Use the build and start commands in `render.yaml`, with `ORVEN_RUNTIME=node`, `CLOUDFLARE_BUILD=0`, and a server-only `DATABASE_URL`. This path shares a Prisma connection pool across requests and uses normal Next.js image optimization. Choose a Render region close to the Supabase database and inspect query latency before changing pool limits.
+
+The blueprint uses Render's Free plan. Free services sleep after 15 minutes without incoming traffic and can take about a minute to restart; application optimizations cannot eliminate that platform cold start. Confirm the actual service plan in Render, since dashboard settings may differ from this file. See [Render's Free service limits](https://render.com/docs/free). No billing plan is changed by this project.
+
+Performance improvements reduce redundant cart/wishlist requests, reuse session CSRF tokens, batch reorder reads, stream product reviews and related items, and compute dashboard chart buckets in a single pass. Collection navigation is cached for five minutes and immediately invalidated after collection edits. Product inventory, cart totals, sessions and payment verification remain live. Cart mutations reconcile only their own expired reservations; checkout and the authenticated `/api/cron` endpoint retain store-wide reconciliation. Configure an external scheduler to call that endpoint with its existing `CRON_SECRET` authorization if background cleanup is desired.
+
+Compare warm requests separately from first visits after idle: record collection/product response time, cart mutation time, database query time, and Render CPU/memory usage. The changes above are not a measured production speed guarantee.
+
+## Optional Cloudflare Workers deployment (historical checks)
 
 Published storefront: https://orven-store.narvasadarryljohn.workers.dev. Sign in at `/account` using `admin@orven.test` and the `DEPLOY_ADMIN_PASSWORD` value saved in your ignored `.env.supabase` file, then open `/admin`. The development passwords below do not work on this deployment.
 

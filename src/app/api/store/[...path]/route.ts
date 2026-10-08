@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
+import { catalogCacheTag } from '@/lib/catalog';
 import { cookies } from 'next/headers';
 import { compare, hash } from 'bcryptjs';
 import { z } from 'zod';
@@ -102,7 +103,10 @@ function errorResponse(e: unknown) {
 export async function GET(request: Request, context: Context) {
   try {
     const path = (await context.params).path.join('/');
-    if (path.startsWith('features/')) return NextResponse.json(await customerToolsGet(path, request), { headers: { 'Cache-Control': 'private, no-store' } });
+    if (path.startsWith('features/'))
+      return NextResponse.json(await customerToolsGet(path, request), {
+        headers: { 'Cache-Control': 'private, no-store' },
+      });
     if (path === 'cart') {
       const u = new URL(request.url);
       return NextResponse.json(
@@ -218,9 +222,9 @@ export async function POST(request: Request, context: Context) {
       return NextResponse.json({ ok: true });
     }
     if (path === 'cart/item' || path === 'cart/promo') {
-      await releaseExpired();
       const id = await cartId(true);
       if (!id) throw new HttpError('Cookie required.');
+      await releaseExpired(id);
       if (path === 'cart/promo') {
         await rateLimit('promo:global', 200);
         await rateLimit('promo:' + sessionBucket, 10);
@@ -439,8 +443,16 @@ export async function POST(request: Request, context: Context) {
             data: { quantity: { increment: data.delta } },
           });
           const movement = await tx.stockMovement.create({ data });
-          undoId = (await saveUndo(tx, admin.id, 'INVENTORY', data.variantId,
-            { quantity: inv.quantity }, { quantity: inv.quantity + data.delta, movementId: movement.id })).id;
+          undoId = (
+            await saveUndo(
+              tx,
+              admin.id,
+              'INVENTORY',
+              data.variantId,
+              { quantity: inv.quantity },
+              { quantity: inv.quantity + data.delta, movementId: movement.id },
+            )
+          ).id;
           await tx.auditLog.create({
             data: {
               actorId: admin.id,
@@ -527,8 +539,16 @@ export async function POST(request: Request, context: Context) {
             ? await tx.product.update({ where: { id }, data })
             : await tx.product.create({ data });
           if (previous && (previous.price !== p.price || previous.salePercent !== p.salePercent)) {
-            undoId = (await saveUndo(tx, admin.id, 'PRODUCT_PRICE', p.id,
-              { price: previous.price, salePercent: previous.salePercent }, { price: p.price, salePercent: p.salePercent })).id;
+            undoId = (
+              await saveUndo(
+                tx,
+                admin.id,
+                'PRODUCT_PRICE',
+                p.id,
+                { price: previous.price, salePercent: previous.salePercent },
+                { price: p.price, salePercent: p.salePercent },
+              )
+            ).id;
             await priceDropNotifications(tx, p, salePrice(previous));
           }
           await tx.image.deleteMany({ where: { productId: p.id } });
@@ -547,9 +567,18 @@ export async function POST(request: Request, context: Context) {
               });
           }
           await tx.auditLog.create({
-            data: { actorId: admin.id, action: 'PRODUCT_SAVED', entityId: p.id,
-              detail: JSON.stringify({ name: p.name, before: previous ? { price: previous.price, salePercent: previous.salePercent } : null,
-                after: { price: p.price, salePercent: p.salePercent } }) },
+            data: {
+              actorId: admin.id,
+              action: 'PRODUCT_SAVED',
+              entityId: p.id,
+              detail: JSON.stringify({
+                name: p.name,
+                before: previous
+                  ? { price: previous.price, salePercent: previous.salePercent }
+                  : null,
+                after: { price: p.price, salePercent: p.salePercent },
+              }),
+            },
           });
         });
       } else if (path === 'admin/collection') {
@@ -591,6 +620,7 @@ export async function POST(request: Request, context: Context) {
       } else throw new HttpError('Not found.', 404);
       revalidatePath('/');
       revalidatePath('/sitemap.xml');
+      if (path === 'admin/collection') revalidateTag(catalogCacheTag, { expire: 0 });
       return NextResponse.json({ ok: true, undoId });
     }
     throw new HttpError('Not found.', 404);

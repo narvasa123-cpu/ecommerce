@@ -66,12 +66,18 @@ export function cartAbandonment(
       last: Math.max(previous?.last ?? time, time),
     });
   }
+  const latestPaid = new Map<string, number>();
+  for (const order of paidOrders) {
+    latestPaid.set(
+      order.cartId,
+      Math.max(latestPaid.get(order.cartId) ?? -Infinity, order.createdAt.getTime()),
+    );
+  }
   let converted = 0,
     abandoned = 0,
     active = 0;
   for (const [id, activity] of carts) {
-    if (paidOrders.some((o) => o.cartId === id && o.createdAt.getTime() >= activity.first))
-      converted++;
+    if ((latestPaid.get(id) ?? -Infinity) >= activity.first) converted++;
     else if (now.getTime() - activity.last >= 24 * 60 * 60 * 1000) abandoned++;
     else active++;
   }

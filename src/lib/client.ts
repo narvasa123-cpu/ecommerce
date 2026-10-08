@@ -1,8 +1,30 @@
-export async function api<T = Record<string, unknown>>(path: string, body?: unknown): Promise<T> {
+let csrfToken: string | undefined;
+let csrfExpires = 0;
+let csrfRequest: Promise<string> | undefined;
+const pendingReads = new Map<string, Promise<unknown>>();
+
+async function getCsrfToken() {
+  if (csrfToken && Date.now() < csrfExpires) return csrfToken;
+  if (!csrfRequest) {
+    csrfRequest = (async () => {
+      const response = await fetch('/api/csrf', { cache: 'no-store' });
+      if (!response.ok) throw new Error('Unable to verify your session. Please try again.');
+      const { token } = (await response.json()) as { token: string };
+      csrfToken = token;
+      csrfExpires = Date.now() + 10 * 60000;
+      return token;
+    })().finally(() => {
+      csrfRequest = undefined;
+    });
+  }
+  return csrfRequest;
+}
+
+async function request<T>(path: string, body?: unknown, signal?: AbortSignal): Promise<T> {
   const options: RequestInit = { cache: 'no-store' };
+  options.signal = signal;
   if (body !== undefined) {
-    const csrf = await fetch('/api/csrf', { cache: 'no-store' });
-    const { token } = (await csrf.json()) as { token: string };
+    const token = await getCsrfToken();
     options.method = 'POST';
     options.headers = { 'Content-Type': 'application/json', 'x-csrf-token': token };
     options.body = JSON.stringify(body);
@@ -11,7 +33,34 @@ export async function api<T = Record<string, unknown>>(path: string, body?: unkn
   const data: unknown = await response.json();
   if (!response.ok) {
     const error = typeof data === 'object' && data !== null && 'error' in data ? data.error : null;
+    if (response.status === 403) {
+      csrfToken = undefined;
+      csrfExpires = 0;
+    }
     throw new Error(typeof error === 'string' ? error : 'Please try again.');
   }
+  if (body !== undefined) {
+    pendingReads.clear();
+    if (path.startsWith('auth/')) {
+      csrfToken = undefined;
+      csrfExpires = 0;
+      window.dispatchEvent(new Event('orven-auth-changed'));
+    }
+  }
   return data as T;
+}
+
+export function api<T = Record<string, unknown>>(
+  path: string,
+  body?: unknown,
+  signal?: AbortSignal,
+): Promise<T> {
+  if (body !== undefined || signal) return request<T>(path, body, signal);
+  const pending = pendingReads.get(path);
+  if (pending) return pending as Promise<T>;
+  const read = request<T>(path).finally(() => {
+    if (pendingReads.get(path) === read) pendingReads.delete(path);
+  });
+  pendingReads.set(path, read);
+  return read;
 }

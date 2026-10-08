@@ -5,24 +5,26 @@ import { productInclude } from './catalog';
 import { salePrice } from './commerce-tools';
 export async function getCart(country = 'PH', delivery = 'standard') {
   const id = await cartId();
-  const pending = id
-    ? await db.order.findFirst({
-        where: { cartId: id, status: 'PENDING' },
-        select: { accessToken: true, payment: { select: { provider: true } } },
-      })
-    : null;
-  const cart = id
-    ? await db.cart.findUnique({
-        where: { id },
-        include: {
-          items: {
-            include: {
-              variant: { include: { inventory: true, product: { include: productInclude } } },
+  const [pending, cart] = await Promise.all([
+    id
+      ? db.order.findFirst({
+          where: { cartId: id, status: 'PENDING' },
+          select: { accessToken: true, payment: { select: { provider: true } } },
+        })
+      : null,
+    id
+      ? db.cart.findUnique({
+          where: { id },
+          include: {
+            items: {
+              include: {
+                variant: { include: { inventory: true, product: { include: productInclude } } },
+              },
             },
           },
-        },
-      })
-    : null;
+        })
+      : null,
+  ]);
   const promotion = cart?.promotionCode
     ? await db.promotion.findUnique({ where: { code: cart.promotionCode } })
     : null;

@@ -1,5 +1,12 @@
 import { db } from './db';
+import { unstable_cache } from 'next/cache';
 import type { Prisma } from '@prisma/client';
+export const catalogCacheTag = 'catalog-navigation';
+export const getCollections = unstable_cache(
+  () => db.collection.findMany(),
+  ['catalog-navigation-v1'],
+  { revalidate: 300, tags: [catalogCacheTag] },
+);
 export const productInclude = {
   images: { orderBy: { position: 'asc' as const } },
   variants: { include: { inventory: true } },

@@ -42,19 +42,21 @@ async function release(tx: Prisma.TransactionClient, id: string, reason: string)
     data: { actorId: 'system', action: 'RESERVATION_RELEASED', entityId: id, detail: reason },
   });
 }
-export async function releaseExpired() {
+export async function releaseExpired(cartId?: string) {
   // Reconcile provider state before releasing a Stripe reservation. A delayed
   // webhook must not allow paid stock to be offered to a different customer.
-  const stripeOrders = await db.order.findMany({
+  const expiredOrders = await db.order.findMany({
     where: {
+      ...(cartId ? { cartId } : {}),
       status: 'PENDING',
       reservationExpiresAt: { lte: new Date() },
-      payment: { provider: 'stripe' },
     },
     include: { payment: true },
   });
-  const releasable: string[] = [];
-  for (const o of stripeOrders) {
+  const releasable = expiredOrders
+    .filter((o) => o.payment?.provider === 'sandbox')
+    .map((o) => o.id);
+  for (const o of expiredOrders.filter((order) => order.payment?.provider === 'stripe')) {
     if (!o.payment?.providerId) {
       releasable.push(o.id);
       continue;
@@ -76,17 +78,12 @@ export async function releaseExpired() {
       console.error('Reservation reconciliation deferred; retaining stock', o.number, e);
     }
   }
-  return db.$transaction(async (tx) => {
-    const orders = await tx.order.findMany({
-      where: {
-        status: 'PENDING',
-        reservationExpiresAt: { lte: new Date() },
-        OR: [{ payment: { provider: 'sandbox' } }, { id: { in: releasable } }],
-      },
-    });
-    for (const o of orders) await release(tx, o.id, 'Payment reservation expired');
-    return orders.length;
-  });
+  // Most customer requests have nothing to release. Avoid opening an empty
+  // transaction, and keep each release atomic without locking the whole batch.
+  for (const id of releasable) {
+    await db.$transaction((tx) => release(tx, id, 'Payment reservation expired'));
+  }
+  return releasable.length;
 }
 export async function cancelOrder(id: string, reason: string) {
   const order = await db.order.findUnique({ where: { id }, include: { payment: true } });
