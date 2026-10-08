@@ -376,6 +376,111 @@
 .account-address-form {
   padding: 24px;
 }
+
+/* Customer atelier refinements */
+.customer-account .account-welcome {
+  min-height: 268px;
+  overflow: hidden;
+  isolation: isolate;
+  align-items: center;
+  padding: clamp(32px, 4vw, 58px);
+}
+.customer-account .account-welcome::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 0 auto;
+  width: 56%;
+  background:
+    linear-gradient(90deg, var(--espresso) 0%, rgb(59 42 34 / 78%) 16%, rgb(59 42 34 / 10%) 75%),
+    url('/images/editorial/campaign.webp') 62% 42% / cover no-repeat;
+  opacity: 0.9;
+  pointer-events: none;
+}
+.customer-account .account-welcome .page-heading {
+  max-width: min(720px, 68%);
+}
+.customer-account .account-welcome h1 {
+  max-width: 14ch;
+  font-size: clamp(42px, 5vw, 66px);
+  letter-spacing: -0.035em;
+  line-height: 0.98;
+}
+.customer-account .account-welcome p:not(.eyebrow) {
+  max-width: 44ch;
+  font-size: 14px;
+  line-height: 1.75;
+}
+.customer-account .account-browse {
+  position: relative;
+  z-index: 1;
+  min-height: 48px;
+  align-self: flex-end;
+  margin-bottom: 2px;
+  transition:
+    color 180ms ease,
+    border-color 180ms ease;
+}
+.customer-account .account-browse svg,
+.account-shortcuts a svg,
+.customer-account .account-add-address summary svg {
+  transition: transform 180ms ease;
+}
+.customer-account .account-browse:hover svg,
+.account-shortcuts a:hover svg:last-child,
+.customer-account .account-add-address summary:hover svg {
+  transform: translateX(3px);
+}
+.customer-account .account-summary > div {
+  min-height: 132px;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease;
+}
+.customer-account .account-summary > div:hover {
+  background: var(--ivory);
+  border-color: var(--taupe);
+}
+.customer-account .account-grid {
+  align-items: start;
+}
+.customer-account .account-sidebar {
+  position: sticky;
+  top: 112px;
+}
+.customer-account .account-section {
+  box-shadow: 0 8px 30px rgb(59 42 34 / 3%);
+}
+.customer-account .account-section-title h2 {
+  font-size: clamp(30px, 3vw, 38px);
+  letter-spacing: -0.025em;
+}
+.customer-account .order-history > a {
+  transition:
+    background-color 180ms ease,
+    padding 180ms ease;
+}
+.customer-account .order-history > a:hover {
+  padding-right: 14px;
+  padding-left: 14px;
+}
+.customer-account .account-add-address summary {
+  justify-content: flex-start;
+  transition: background-color 180ms ease;
+}
+.customer-account :focus-visible {
+  outline: 2px solid var(--brass);
+  outline-offset: 3px;
+}
+
+@media (max-width: 1000px) {
+  .customer-account .account-welcome::after {
+    width: 62%;
+  }
+  .customer-account .account-sidebar {
+    position: static;
+  }
+}
 @media (max-width: 1000px) {
   .customer-account .account-grid {
     grid-template-columns: minmax(0, 260px) minmax(0, 1fr);
@@ -397,8 +502,40 @@
 }
 @media (max-width: 760px) {
   .customer-account .account-welcome {
+    min-height: 360px;
+    align-items: flex-start;
     padding: 28px;
-    gap: 12px;
+    gap: 20px;
+  }
+  .customer-account .account-welcome::after {
+    inset: auto 0 0;
+    width: 100%;
+    height: 60%;
+    opacity: 0.44;
+    background:
+      linear-gradient(
+        180deg,
+        var(--espresso) 0%,
+        rgb(59 42 34 / 50%) 40%,
+        rgb(59 42 34 / 12%) 100%
+      ),
+      url('/images/editorial/campaign.webp') 68% 48% / cover no-repeat;
+  }
+  .customer-account .account-welcome .page-heading {
+    max-width: 100%;
+  }
+  .customer-account .account-welcome h1 {
+    font-size: clamp(42px, 10vw, 58px);
+  }
+  .customer-account .account-welcome p:not(.eyebrow) {
+    max-width: 38ch;
+  }
+  .customer-account .account-browse {
+    align-self: flex-start;
+    margin-top: auto;
+    margin-bottom: 0;
+    min-width: min(100%, 270px);
+    justify-content: space-between;
   }
   .customer-account .account-summary {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -465,6 +602,7 @@
 }
 @media (max-width: 560px) {
   .customer-account .account-welcome {
+    min-height: 342px;
     padding: 24px;
   }
   .account-section {
@@ -493,5 +631,16 @@
   }
   .account-address-form {
     padding: 18px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .customer-account .account-browse,
+  .customer-account .account-browse svg,
+  .account-shortcuts a svg,
+  .customer-account .account-add-address summary,
+  .customer-account .account-add-address summary svg,
+  .customer-account .account-summary > div,
+  .customer-account .order-history > a {
+    transition: none;
   }
 }
