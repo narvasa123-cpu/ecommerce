@@ -35,7 +35,10 @@
 .notification-card h2 { font-size: clamp(24px, 3vw, 32px); margin: 12px 0; }
 .notification-card p { margin: 12px 0; }
 .notification-card .row { flex-wrap: wrap; gap: 12px; }
-.copy-reference { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.copy-reference { position: relative; display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.copy-toast { position: absolute; z-index: 20; top: calc(100% + 7px); left: 0; width: max-content; max-width: min(280px, calc(100vw - 40px)); padding: 8px 11px; border: 1px solid var(--line); background: var(--ivory); color: var(--espresso); font-size: 11px; line-height: 1.4; box-shadow: 0 5px 16px #21170f1c; animation: copy-toast-in 160ms ease-out; }
+.copy-toast.success { background: var(--espresso); }
+@keyframes copy-toast-in { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: translateY(0); } }
 .product-reviews { margin: 64px 0; max-width: 900px; }
 .product-reviews h2 { font-size: clamp(30px, 4vw, 44px); margin-bottom: 24px; }
 .review-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
@@ -66,4 +69,4 @@
   .notification-card .customer-hub-links { margin-bottom: 0; }
   .review-heading { align-items: flex-start; flex-direction: column; gap: 16px; }
 }
-@media (prefers-reduced-motion: reduce) { .tool-button { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .tool-button, .copy-toast { transition: none; animation: none; } }

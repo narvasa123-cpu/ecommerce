@@ -19,7 +19,6 @@ import {
   ShoppingBag,
   Package,
   UserRound,
-  Copy,
   RotateCcw,
   Bell,
   Star,
@@ -396,31 +395,7 @@ export function MobileNavigation() {
     </nav>
   );
 }
-export function CopyReference({ value }: { value: string }) {
-  const [message, setMessage] = useState('');
-  return (
-    <span className="copy-reference">
-      <button
-        className="tool-button"
-        type="button"
-        onClick={async () => {
-          try {
-            await navigator.clipboard.writeText(value);
-            setMessage('Copied');
-          } catch {
-            setMessage('Copy unavailable. Select the reference number to copy it.');
-          }
-        }}
-      >
-        <Copy size={15} aria-hidden="true" />
-        Copy reference
-      </button>
-      <span role="status" className="small">
-        {message}
-      </span>
-    </span>
-  );
-}
+export { CopyReference } from './copy-reference';
 export function Reorder({ orderId }: { orderId: string }) {
   const [busy, setBusy] = useState(false),
     [error, setError] = useState('');

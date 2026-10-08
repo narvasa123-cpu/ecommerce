@@ -11,6 +11,14 @@ export function adminQuery(params: AdminParams) {
   };
 }
 export type AdminQuery = ReturnType<typeof adminQuery>;
+export function orderStatusHref(query: AdminQuery, state = '') {
+  const params = new URLSearchParams();
+  if (query.q) params.set('q', query.q);
+  if (query.sort) params.set('sort', query.sort);
+  if (state) params.set('state', state);
+  const search = params.toString();
+  return '/admin/orders' + (search ? '?' + search : '');
+}
 export const pageSize = 12;
 export function pagination(total: number, requested: number) {
   const pages = Math.max(1, Math.ceil(total / pageSize));

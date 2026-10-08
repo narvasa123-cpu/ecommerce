@@ -551,6 +551,7 @@ a:hover {
 }
 .swatches {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 7px;
   margin-top: 14px;
@@ -565,6 +566,15 @@ a:hover {
   font-size: 9px;
   color: var(--muted);
   margin-left: auto;
+}
+.stock-label.low-stock-badge {
+  padding: 3px 8px;
+  border: 1px solid #e6d4b8;
+  border-radius: 999px;
+  background: #f8f0e3;
+  color: #795729;
+  font-weight: 600;
+  white-space: nowrap;
 }
 .sample-note {
   font-size: 9px;
@@ -2210,5 +2220,48 @@ td .underlink {
   }
   .skip-link:not(:focus) {
     top: -100px;
+  }
+}
+
+.back-to-top {
+  position: fixed;
+  right: max(20px, env(safe-area-inset-right));
+  bottom: 24px;
+  z-index: 35;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--ivory);
+  color: var(--espresso);
+  box-shadow: 0 5px 18px #21170f14;
+  cursor: pointer;
+  transition: background var(--motion), transform var(--motion), box-shadow var(--motion);
+}
+.back-to-top:hover {
+  background: var(--surface);
+  box-shadow: 0 7px 22px #21170f20;
+  transform: translateY(-2px);
+}
+.back-to-top:focus-visible {
+  outline: 2px solid var(--espresso);
+  outline-offset: 3px;
+}
+.back-to-top[hidden] {
+  display: none;
+}
+body:has(.admin-workspace) .back-to-top {
+  bottom: 92px;
+}
+@media (max-width: 760px) {
+  body:has(.mobile-bottom-nav) .back-to-top {
+    bottom: calc(88px + env(safe-area-inset-bottom));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .back-to-top {
+    transition: none;
   }
 }

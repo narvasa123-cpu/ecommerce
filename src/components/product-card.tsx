@@ -3,9 +3,11 @@ import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 import { ProductPrice, QuickAdd } from './customer-tools';
 import { availability, type CatalogProduct } from '@/lib/catalog';
+import { lowStockLabel } from '@/lib/inventory-label';
 export function ProductCard({ product: p }: { product: CatalogProduct }) {
   const v = p.variants[0];
   const stock = p.variants.reduce((s, v) => s + (v.inventory?.quantity || 0), 0);
+  const lowStock = lowStockLabel(stock, v?.madeToOrder);
   return (
     <article className="product-card">
       <Link prefetch={false} href={'/products/' + p.slug} className="product-picture">
@@ -49,7 +51,9 @@ export function ProductCard({ product: p }: { product: CatalogProduct }) {
             role="img"
           />
         ))}
-        <span className="stock-label">{availability(stock, v?.madeToOrder)}</span>
+        <span className={'stock-label' + (lowStock ? ' low-stock-badge' : '')}>
+          {lowStock || availability(stock, v?.madeToOrder)}
+        </span>
       </div>
       <QuickAdd variantId={v?.id} disabled={stock === 0} />
     </article>

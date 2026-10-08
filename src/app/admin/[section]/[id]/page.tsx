@@ -10,6 +10,7 @@ import { AdminForm } from '@/components/admin-form';
 import { PageHeading, Panel, Badge } from '@/components/admin/ui';
 import { ProductEditor } from '@/components/admin/product-editor';
 import { FulfillmentForm, PromotionEditor } from '@/components/admin/editors';
+import { CopyReference } from '@/components/copy-reference';
 async function mediaLibrary() {
   return mediaManifest.assets
     .map((asset) => asset.path)
@@ -125,6 +126,7 @@ export default async function AdminEdit({
             label={'Payment: ' + (o.payment?.status.toLowerCase() || 'pending')}
           />
           <Badge value={o.status} />
+          <CopyReference value={o.number} label="Copy order ID" successMessage="Order ID copied" />
           <span className="a-muted">
             {o.payment?.provider === 'sandbox' ? 'Sandbox payment' : 'Stripe test payment'}
           </span>

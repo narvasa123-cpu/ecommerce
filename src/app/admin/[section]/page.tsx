@@ -17,6 +17,7 @@ import {
 } from '@/lib/admin';
 import { Badge, Empty, Filters, PageHeading, Pagination, Panel } from '@/components/admin/ui';
 import { InventoryAdjust } from '@/components/admin/inventory-adjust';
+import { OrderStatusTabs } from '@/components/admin/order-status-tabs';
 function Records({
   section,
   query,
@@ -39,6 +40,7 @@ function Records({
   const paging = pagination(total, query.page);
   return (
     <Panel>
+      {section === 'orders' && <OrderStatusTabs query={query} states={states} />}
       <Filters
         section={section}
         query={query}
