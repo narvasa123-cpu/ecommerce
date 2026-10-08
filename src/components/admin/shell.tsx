@@ -78,7 +78,7 @@ export function AdminShell({
   }
   return (
     <div className={'admin-workspace' + (collapsed ? ' a-sidebar-collapsed' : '')}>
-      <aside className="a-sidebar" id="admin-desktop-navigation">
+      <aside className="a-sidebar scrollbar-hidden" id="admin-desktop-navigation">
         <Link href="/admin" className="a-brand">
           ORVEN<span>ADMINISTRATION</span>
         </Link>
@@ -92,8 +92,8 @@ export function AdminShell({
         <nav aria-label="Administration">{links()}</nav>
         <div className="a-sidebar-bottom">
           <div className="a-mode-note">
-            <span className="a-mode-dot" /> Test environment
-            <p>Orders and payments are simulated.</p>
+            <span className="a-mode-dot" /> Operational notice
+            <p>Orders and payments are not processed live.</p>
           </div>
           <Link href="/">
             View storefront <ArrowUpRight size={16} aria-hidden="true" />
@@ -155,16 +155,16 @@ export function AdminShell({
             <Logout />
           </div>
         </header>
-        <div className="a-content">
+        <div className="a-content scrollbar-hidden">
           <ServiceStatus />
           {children}
         </div>
         <UndoToast />
         <footer className="a-footer">
-          ORVEN administration <span>PHP · Test store</span>
+          ORVEN administration
         </footer>
       </div>
-      <dialog ref={menu} className="a-mobile-dialog" aria-label="Admin navigation">
+      <dialog ref={menu} className="a-mobile-dialog scrollbar-hidden" aria-label="Admin navigation">
         <div className="a-dialog-title">
           <strong>ORVEN admin</strong>
           <button

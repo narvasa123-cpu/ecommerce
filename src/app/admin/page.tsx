@@ -6,7 +6,7 @@ import { requireAdmin } from '@/lib/security';
 import { money } from '@/lib/pricing';
 import { cartAbandonment, salesBreakdowns } from '@/lib/analytics';
 import { dateLabel, type AdminParams } from '@/lib/admin';
-import { Badge, PageHeading, Panel } from '@/components/admin/ui';
+import { Badge, Panel } from '@/components/admin/ui';
 import {
   ArrowUpRight,
   ShoppingBag,
@@ -107,9 +107,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   const compare = (current: number, previous: number) =>
     previous > 0
       ? `${current >= previous ? '+' : ''}${(((current - previous) / previous) * 100).toFixed(1)}%`
-      : current > 0
-        ? 'No prior baseline'
-        : 'No change';
+      : null;
   const growthPoints = buckets.map((b) => ({
     date: dateLabel(b.date),
     value: customerDates.filter((c) => c.createdAt < new Date(b.date.getTime() + 86400000)).length,
@@ -137,16 +135,6 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           priority
         />
       </section>
-      <div className="a-dashboard-heading">
-        <PageHeading
-          title="Overview"
-          description="A clear view of your store, and what needs your attention."
-        />
-      </div>
-      <div className="a-report-note">
-        <span className="a-mode-dot" /> Test-store data <span>·</span> {dateLabel(since)} –{' '}
-        {dateLabel(today)} <span>·</span> PHP
-      </div>
       <div className="a-metrics">
         {[
           {
@@ -159,7 +147,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           {
             name: 'Total orders',
             value: String(count),
-            note: 'All payment and fulfillment states',
+            note: 'Across all payment and fulfillment states',
             icon: ShoppingBag,
             change: compare(count, previousOrders),
           },
@@ -176,7 +164,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           {
             name: 'New customers',
             value: String(customers),
-            note: 'Registered customer accounts',
+            note: 'Registered accounts in this period',
             icon: Users,
             change: compare(customers, previousCustomers),
           },
@@ -188,15 +176,17 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
             </div>
             <strong>{value}</strong>
             <p>{note}</p>
-            <span
-              className={
-                'a-metric-change ' +
-                (change.startsWith('-') ? 'negative' : change.startsWith('+') ? 'positive' : '')
-              }
-              title="Compared with the preceding reporting period"
-            >
-              {change}
-            </span>
+            {change && (
+              <span
+                className={
+                  'a-metric-change ' +
+                  (change.startsWith('-') ? 'negative' : change.startsWith('+') ? 'positive' : '')
+                }
+                title="Compared with the preceding reporting period"
+              >
+                {change}
+              </span>
+            )}
           </div>
         ))}
       </div>
@@ -462,8 +452,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           <p className="a-muted">
             Distinct carts updated in this reporting period. A cart is abandoned after 24 hours
             without an update or a paid order after its first tracked update. Active carts are
-            excluded from the rate. Recovered carts count as converted. Tracking begins with this
-            release; older untracked carts are excluded.
+            excluded from the rate. Recovered carts count as converted.
           </p>
         </Panel>
         <Panel
@@ -557,7 +546,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
               <div key={a.id}>
                 <span className="a-timeline-dot" />
                 <strong>{a.action.toLowerCase().replaceAll('_', ' ')}</strong>
-                <p>{a.detail}</p>
+                <p className="scrollbar-hidden">{a.detail}</p>
                 <small>{dateLabel(a.createdAt)}</small>
               </div>
             ))}

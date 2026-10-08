@@ -23,20 +23,30 @@ export function UndoToast() {
   return <div className="a-undo-toast" role="status"><span>Change saved. Safe undo is available for up to 5 minutes.</span><UndoButton id={action.id} onUndone={dismiss} /><button className="a-icon" onClick={dismiss} aria-label="Dismiss undo notice"><X size={16} /></button></div>;
 }
 export function ServiceStatus() {
-  const [state, setState] = useState('Checking services…');
+  const [state, setState] = useState('');
   useEffect(() => {
     let alive = true; let controller: AbortController | undefined;
     async function check() {
       controller?.abort(); const activeController = new AbortController(); controller = activeController; const timeout = setTimeout(() => activeController.abort(), 10000);
-      try { const response = await fetch('/api/admin/status', { cache: 'no-store', signal: activeController.signal }); if (!response.ok) throw new Error(); const result = await response.json() as { payments: string }; if (alive && !activeController.signal.aborted) setState(`Database online · Payments ${result.payments === 'sandbox' ? 'sandbox' : result.payments === 'test-configured' ? 'test configured' : 'not configured'}`); }
-      catch { if (alive) setState(navigator.onLine ? 'Services unreachable — retrying' : 'Offline — reconnect to continue'); }
+      try {
+        const response = await fetch('/api/admin/status', { cache: 'no-store', signal: activeController.signal });
+        if (!response.ok) throw new Error();
+        const result = await response.json() as { payments: string };
+        if (alive && !activeController.signal.aborted) {
+          setState(result.payments === 'not-configured' ? 'Payment processing is not configured.' : '');
+        }
+      }
+      catch {
+        if (alive) setState(navigator.onLine ? 'Service status is unavailable. Retrying.' : 'Offline — reconnect to continue.');
+      }
       finally { clearTimeout(timeout); }
     }
     void check(); const timer = setInterval(() => { if (!document.hidden) void check(); }, 30000);
     window.addEventListener('online', check); window.addEventListener('offline', check);
     return () => { alive = false; clearInterval(timer); controller?.abort(); window.removeEventListener('online', check); window.removeEventListener('offline', check); };
   }, []);
-  return <p className="a-service-status" role="status"><Activity size={15} aria-hidden="true" />{state}<small>Database check every 30s; payment configuration only, not provider uptime.</small></p>;
+  if (!state) return null;
+  return <p className="a-service-status" role="alert"><Activity size={15} aria-hidden="true" />{state}</p>;
 }
 export function PrintReport() {
   return <button className="a-btn primary report-print-button" onClick={() => window.print()}><Download size={16} aria-hidden="true" />Print / save PDF</button>;

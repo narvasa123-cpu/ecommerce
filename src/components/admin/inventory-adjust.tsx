@@ -61,7 +61,7 @@ export function InventoryAdjust({
       )}
       <dialog
         ref={dialog}
-        className="a-modal"
+        className="a-modal scrollbar-hidden"
         aria-labelledby={'adjust-' + id}
         onCancel={(e) => {
           if (busy) e.preventDefault();
