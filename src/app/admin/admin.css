@@ -1,3 +1,26 @@
+.a-tools-comparisons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.a-tools-comparisons strong { font-size: 28px; font-variant-numeric: tabular-nums; }
+.a-alert-list { display: grid; gap: 14px; }
+.a-alert-list a { padding: 12px; border: 1px solid var(--a-line); min-height: 44px; }
+.a-sales-alert { padding: 16px; border-left: 3px solid var(--a-amber); background: var(--a-amber-bg); color: var(--a-text); }
+.a-undo-row { display: flex; justify-content: space-between; align-items: center; gap: 20px; border-bottom: 1px solid var(--a-line); padding: 14px 0; overflow-wrap: anywhere; }
+.a-undo-row > span { min-width: 0; }
+.a-service-status { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 0; font-size: 12px; color: var(--a-muted); }
+.a-service-status small { width: 100%; }
+.a-report-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+.a-undo-toast { position: fixed; bottom: 20px; right: 20px; z-index: 80; max-width: min(550px, calc(100vw - 40px)); display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 20px; background: var(--a-panel); color: var(--a-text); border: 1px solid var(--a-line); box-shadow: 0 8px 28px #15131118; }
+@media (max-width: 600px) { .a-tools-comparisons { grid-template-columns: 1fr; } }
+@media print {
+  .a-sidebar, .a-topbar, .a-service-status, .a-undo-toast, .a-report-actions, .a-footer, .skip-link { display: none !important; }
+  .admin-workspace, .a-main, .a-content { display: block !important; margin: 0 !important; padding: 0 !important; width: 100% !important; min-height: 0 !important; background: white !important; color: black !important; }
+  .printable-report .a-panel { box-shadow: none; border: 0; break-inside: auto; }
+  .printable-report .a-table-wrap { overflow: visible; }
+  .printable-report table { width: 100%; font-size: 9pt; }
+  .printable-report thead { display: table-header-group; }
+  .printable-report tr { break-inside: avoid; }
+  .printable-report h2 { break-after: avoid; }
+  @page { size: A4 landscape; margin: 14mm; }
+}
 .admin-workspace {
   --a-bg: #f5f4f0;
   --a-panel: #fffefa;

@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, ArrowLeft, Plus, X } from 'lucide-react';
 import { useStore } from './store-provider';
-import { money } from '@/lib/pricing';
+import { ProductPrice, SaveProduct } from './customer-tools';
 import type { CatalogProduct } from '@/lib/catalog';
 function stockLabel(q: number, mto: boolean) {
   return mto
@@ -108,7 +108,8 @@ export function ProductDetail({ product: p }: { product: CatalogProduct }) {
       <div className="product-details">
         <p className="eyebrow">{p.collection.name.toUpperCase()} / CONCEPT PIECE</p>
         <h1>{p.name}</h1>
-        <p className="product-price">{money(p.price)}</p>
+        <div className="product-price"><ProductPrice product={p} /></div>
+        <SaveProduct productId={p.id} />
         <p className="product-description">{p.description}</p>
         <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
           <legend className="field-label">Colour / {v?.color}</legend>

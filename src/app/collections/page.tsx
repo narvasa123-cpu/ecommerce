@@ -4,6 +4,7 @@ import { Search, ArrowRight } from 'lucide-react';
 import { db } from '@/lib/db';
 import { productInclude } from '@/lib/catalog';
 import { ProductCard } from '@/components/product-card';
+import { SearchSuggestions } from '@/components/customer-tools';
 import type { Prisma } from '@prisma/client';
 import { fromPhpAmount, phpAmount, money } from '@/lib/pricing';
 export const metadata: Metadata = {
@@ -26,7 +27,10 @@ export default async function Collections({
   if (query.collection) where.collection = { slug: query.collection };
   if (query.material) where.material = query.material;
   const max = Number(query.max);
-  if (max > 0 && Number.isFinite(max)) where.price = { lte: fromPhpAmount(max) };
+  if (max > 0 && Number.isFinite(max)) {
+    const matches = await db.$queryRaw<{ id: string }[]>`SELECT "id" FROM "Product" WHERE ROUND("price"::numeric * (100 - "salePercent") / 100) <= ${fromPhpAmount(max)}`;
+    where.id = { in: matches.map(p => p.id) };
+  }
   const count = await db.product.count({ where });
   const pages = Math.max(1, Math.ceil(count / 12));
   const rawPage = Number(query.page);
@@ -85,16 +89,7 @@ export default async function Collections({
       </nav>
       <form className="filters" action="/collections">
         {query.collection && <input type="hidden" name="collection" value={query.collection} />}
-        <label>
-          Search pieces
-          <input
-            name="q"
-            defaultValue={query.q}
-            type="search"
-            placeholder="A name, a detail, a daily companion"
-            autoFocus={query.search === '1'}
-          />
-        </label>
+        <SearchSuggestions initial={query.q} autoFocus={query.search === '1'} />
         <label>
           Category
           <select name="category" defaultValue={query.category || ''}>

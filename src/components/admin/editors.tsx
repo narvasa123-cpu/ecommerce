@@ -31,7 +31,7 @@ export function FulfillmentForm({
         <select name="status" value={nextStatus} onChange={(e) => setNextStatus(e.target.value)}>
           {(transitions[status] || [status]).map((s) => (
             <option key={s} value={s}>
-              {s === 'PAID' ? 'Unfulfilled' : s.charAt(0) + s.slice(1).toLowerCase()}
+              {s === 'PAID' ? 'Confirmed / unfulfilled' : s === 'PROCESSING' ? 'Packed' : s.charAt(0) + s.slice(1).toLowerCase()}
             </option>
           ))}
         </select>

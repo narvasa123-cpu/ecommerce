@@ -10,9 +10,9 @@ export async function GET(request: Request) {
     const section = url.searchParams.get('section');
     const query = adminQuery(Object.fromEntries(url.searchParams));
     let rows: unknown[][] = [];
-    if (section === 'orders') {
+    if (section === 'orders' || section === 'sales') {
       const records = await db.order.findMany({
-        where: orderWhere(query),
+        where: { ...orderWhere(query), ...(section === 'sales' ? { createdAt: { gte: new Date(Date.now() - 30 * 86400000) }, payment: { status: 'PAID' } } : {}) },
         take: 10001,
         orderBy: { createdAt: query.sort === 'oldest' ? 'asc' : 'desc' },
         include: { payment: true },

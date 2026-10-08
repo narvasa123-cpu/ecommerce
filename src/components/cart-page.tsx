@@ -6,6 +6,7 @@ import { ArrowRight, Minus, Plus, ShoppingBag } from 'lucide-react';
 import { useStore, type CartData } from './store-provider';
 import { api } from '@/lib/client';
 import { money, conversionRounding, phpMinorMoney } from '@/lib/pricing';
+import { salePrice } from '@/lib/commerce-tools';
 export function Totals({ totals }: { totals: CartData['totals'] }) {
   const rounding = conversionRounding(totals);
   return (
@@ -159,7 +160,7 @@ export function CartPage() {
                   <p className="small muted">
                     {i.variant.color} / {i.variant.size}
                   </p>
-                  <p className="small">{money(i.variant.product.price)}</p>
+                  <p className="small">{money(salePrice(i.variant.product))}</p>
                   <div className="quantity">
                     <button
                       aria-label={'Decrease ' + i.variant.product.name}
@@ -186,7 +187,7 @@ export function CartPage() {
                     Remove
                   </button>
                 </div>
-                <span>{money(i.variant.product.price * i.quantity)}</span>
+                <span>{money(salePrice(i.variant.product) * i.quantity)}</span>
               </article>
             ))}
             <Link className="underlink" style={{ marginTop: 25 }} href="/collections">

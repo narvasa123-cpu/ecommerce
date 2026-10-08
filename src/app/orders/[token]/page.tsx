@@ -8,7 +8,9 @@ import { releaseExpired } from '@/lib/orders';
 import { money } from '@/lib/pricing';
 import { Totals } from '@/components/cart-page';
 import { OrderControls } from '@/components/order-controls';
-import { cartId } from '@/lib/security';
+import { cartId, currentUser } from '@/lib/security';
+import { orderStages, orderStage } from '@/lib/commerce-tools';
+import { CopyReference, Reorder } from '@/components/customer-tools';
 export const metadata: Metadata = {
   title: 'Your order',
   robots: { index: false, follow: false },
@@ -25,8 +27,9 @@ export default async function Page({ params }: { params: Promise<{ token: string
   const sandbox = order.payment?.provider === 'sandbox';
   const pending = order.status === 'PENDING';
   const cancelled = order.status === 'CANCELLED';
-  const stages = ['PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED'];
-  const stage = stages.indexOf(order.status);
+  const stage = orderStage(order.status);
+  const user = await currentUser();
+  const events = await db.auditLog.findMany({ where: { entityId: order.id, action: { in: ['ORDER_RESERVED', 'ORDER_PAID', 'ORDER_UPDATED'] } }, orderBy: { createdAt: 'asc' }, take: 100 });
   const ownsCart = order.cartId === (await cartId());
   return (
     <div className="page-container">
@@ -42,6 +45,7 @@ export default async function Page({ params }: { params: Promise<{ token: string
         </div>
         <div className="page-heading">
           <p className="eyebrow">{order.number}</p>
+          <CopyReference value={order.number} />
           <h1>
             {pending
               ? 'A moment to confirm.'
@@ -67,14 +71,20 @@ export default async function Page({ params }: { params: Promise<{ token: string
         )}
         {!cancelled && (
           <div className="order-status">
-            {stages.map((s, i) => (
-              <div className={i <= stage ? 'complete' : ''} key={s}>
-                {i + 1}. {s === 'PAID' ? 'Confirmed' : s.charAt(0) + s.slice(1).toLowerCase()}
+            {orderStages.map((s, i) => (
+              <div className={i <= stage ? 'complete' : ''} key={s.status} aria-current={i === stage ? 'step' : undefined}>
+                {i + 1}. {s.label}
+                <p className="small">{(() => {
+                  const event = s.status === 'PENDING' ? { createdAt: order.createdAt } : events.find(e =>
+                    s.status === 'PAID' ? e.action === 'ORDER_PAID' : e.action === 'ORDER_UPDATED' && e.detail.includes('→ ' + s.status));
+                  return event ? event.createdAt.toLocaleString('en-PH', { timeZone: 'Asia/Manila' }) : i <= stage ? 'Date not separately recorded' : 'Upcoming';
+                })()}</p>
               </div>
             ))}
           </div>
         )}
         {pending && ownsCart && <OrderControls token={order.accessToken} sandbox={sandbox} />}
+        {user?.id === order.userId && order.payment?.status === 'PAID' && <Reorder orderId={order.id} />}
         <div className="summary-box" style={{ marginTop: 30 }}>
           <h2>Your considered selection.</h2>
           <div className="review-items">

@@ -4,6 +4,7 @@ import { HttpError, token, appUrl } from './security';
 import Stripe from 'stripe';
 import type { Prisma } from '@prisma/client';
 import { transactionLock } from './transaction-lock';
+import { salePrice } from './commerce-tools';
 export const sandboxMode = () => process.env.PAYMENT_MODE !== 'stripe';
 export function stripeClient() {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -158,7 +159,7 @@ export async function reserveOrder(input: {
     if (cart.promotionCode && !promotion)
       throw new HttpError('This promotion is unavailable. Remove it and try again.');
     const totals = priceOrder(
-      cart.items.map((i) => ({ price: i.variant.product.price, quantity: i.quantity })),
+      cart.items.map((i) => ({ price: salePrice(i.variant.product), quantity: i.quantity })),
       input.address.country,
       input.delivery,
       promotion,
@@ -215,7 +216,7 @@ export async function reserveOrder(input: {
             name: i.variant.product.name,
             variant: i.variant.color + ' / ' + i.variant.size,
             image: i.variant.product.images[0]?.url || '/images/tote.webp',
-            unitPrice: i.variant.product.price,
+            unitPrice: salePrice(i.variant.product),
             quantity: i.quantity,
           })),
         },

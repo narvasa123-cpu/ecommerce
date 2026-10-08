@@ -18,6 +18,7 @@ import {
   X,
 } from 'lucide-react';
 import { Logout } from '@/components/auth';
+import { ServiceStatus, UndoToast } from './staff-tools';
 const navigation = [
   { label: 'Overview', href: '/admin', icon: LayoutDashboard },
   { label: 'Orders', href: '/admin/orders', icon: ShoppingBag },
@@ -28,6 +29,8 @@ const navigation = [
   { label: 'Promotions', href: '/admin/promotions', icon: Tag },
   { label: 'Inbox', href: '/admin/inbox', icon: Inbox },
   { label: 'Activity log', href: '/admin/audit', icon: History },
+  { label: 'Notification center', href: '/admin/operations', icon: Inbox },
+  { label: 'Sales & inventory reports', href: '/admin/reports', icon: Layers3 },
 ];
 export function AdminShell({
   children,
@@ -112,7 +115,8 @@ export function AdminShell({
             <Logout />
           </div>
         </header>
-        <div className="a-content">{children}</div>
+        <div className="a-content"><ServiceStatus />{children}</div>
+        <UndoToast />
         <footer className="a-footer">
           ORVEN administration <span>PHP · Test store</span>
         </footer>

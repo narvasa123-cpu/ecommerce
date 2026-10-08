@@ -18,6 +18,7 @@ import { money } from '@/lib/pricing';
 import { AuthForm, Logout, RemoveAddress } from '@/components/auth';
 import { SimpleForm } from '@/components/forms';
 import { AddressFields } from '@/components/address-fields';
+import { CustomerHubLinks } from '@/components/customer-tools';
 import './account.css';
 export const metadata: Metadata = {
   title: 'Your account',
@@ -62,6 +63,7 @@ export default async function Account({
           Explore the collection <ArrowUpRight size={20} aria-hidden="true" />
         </Link>
       </div>
+      <CustomerHubLinks />
       <div className="account-summary" aria-label="Account summary">
         <div>
           <span className="account-stat-icon">

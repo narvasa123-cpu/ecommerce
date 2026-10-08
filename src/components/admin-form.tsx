@@ -3,6 +3,7 @@ import { useState, type ReactNode, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/client';
 import { fromPhpAmount } from '@/lib/pricing';
+import { rememberUndo } from '@/components/admin/staff-tools';
 export function AdminForm({
   endpoint,
   children,
@@ -56,7 +57,8 @@ export function AdminForm({
         }
       });
       if (body.expiresAt) body.expiresAt = new Date(String(body.expiresAt) + 'Z').toISOString();
-      await api('admin/' + endpoint, body);
+      const result = await api<{ undoId?: string }>('admin/' + endpoint, body);
+      rememberUndo(result.undoId);
       setMessage('Changes saved successfully.');
       if (redirectTo) router.push(redirectTo);
       router.refresh();

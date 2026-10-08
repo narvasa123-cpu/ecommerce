@@ -1,0 +1,19 @@
+import Link from 'next/link';
+import { staffOverview } from '@/lib/staff-tools';
+import { money } from '@/lib/pricing';
+import { PageHeading, Panel, Badge } from '@/components/admin/ui';
+import { UndoButton } from '@/components/admin/staff-tools';
+export default async function Operations() {
+  const data = await staffOverview();
+  const change = (n: number | null) => n === null ? 'No comparable baseline' : `${n >= 0 ? '+' : ''}${n.toFixed(1)}%`;
+  return <><PageHeading title="Notification center" description="Live stock, order, payment and sales signals. Sales periods use Asia/Manila time; test-store data only." />
+    <div className="a-tools-comparisons"><Panel title="Today vs yesterday"><div className="a-panel-body"><strong>{money(data.today.total)}</strong><p>{data.today.orders} paid orders · Yesterday {money(data.yesterday.total)}</p><p>{change(data.todayChange)}</p></div></Panel><Panel title="This week vs last week"><div className="a-panel-body"><strong>{money(data.week.total)}</strong><p>{data.week.orders} paid orders · Last week {money(data.lastWeek.total)}</p><p>{change(data.weekChange)}</p></div></Panel></div>
+    <p className="a-muted">Comparisons use the same elapsed time in the previous day/week, Monday week start, and paid orders grouped by order creation time. Zero baselines never produce a misleading percentage.</p>
+    <Panel title="Attention queue"><div className="a-panel-body a-alert-list"><Link href="/admin/inventory?state=low"><Badge value="LOW" /> {data.low.length}{data.low.length === 50 ? '+' : ''} low-stock variants (3 or fewer)</Link><Link href="/admin/orders?state=unfulfilled"><Badge value="PAID" /> {data.unfulfilled} paid orders awaiting packing</Link><Link href="/admin/orders?state=PENDING"><Badge value="PENDING" /> {data.pending} pending payments</Link><Link href="/admin/orders?state=FAILED"><Badge value="FAILED" /> {data.failed} failed payments since yesterday — inspect the activity log and cancelled orders too</Link><Link href="/admin/audit">System events and activity log</Link>
+      {data.anomaly !== null ? <p className="a-sales-alert" role="status">Unusual weekly sales: {change(data.anomaly)} versus the comparable prior period. Review before taking action.</p> : <p className="a-muted">No unusual-sales signal. Rule: at least 5 prior-period paid orders and a change of ±50% or more.</p>}
+    </div></Panel>
+    <Panel title="Low-stock warnings"><div className="a-table-wrap"><table className="a-table"><thead><tr><th>Product</th><th>SKU</th><th>Available</th><th>Action</th></tr></thead><tbody>{data.low.length ? data.low.map(v => <tr key={v.id}><td>{v.product.name}</td><td>{v.sku}</td><td>{v.inventory?.quantity || 0}</td><td><Link href={'/admin/inventory?q=' + encodeURIComponent(v.sku)}>Review stock</Link></td></tr>) : <tr><td colSpan={4}>No low-stock variants.</td></tr>}</tbody></table></div></Panel>
+    <Panel title="Inactive products — no paid sales for 90 days"><div className="a-panel-body"><p className="a-muted">Published products at least 90 days old; excludes new listings. Up to 50 shown. Detection only—nothing is automatically archived.</p>{data.inactive.length ? <ul>{data.inactive.map(p => <li key={p.id}><Link href={'/admin/products/' + p.id}>{p.name}</Link></li>)}</ul> : <p>No inactive products detected.</p>}</div></Panel>
+    <Panel title="Recover a recent change"><div className="a-panel-body"><p className="a-muted">Your price/discount and stock edits can be undone for 5 minutes if no conflicting change occurred. Product descriptions, orders and payments are not reversed.</p>{data.undo.length ? data.undo.map(a => <div className="a-undo-row" key={a.id}><span>{a.kind === 'INVENTORY' ? 'Stock adjustment' : 'Price / discount change'} · {a.entityId}<br /><small>Expires {a.expiresAt.toLocaleTimeString('en-PH', { timeZone: 'Asia/Manila' })}</small></span><UndoButton id={a.id} /></div>) : <p>No recoverable changes.</p>}</div></Panel>
+  </>;
+}

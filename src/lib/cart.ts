@@ -2,6 +2,7 @@ import { db } from './db';
 import { cartId } from './security';
 import { priceOrder } from './pricing';
 import { productInclude } from './catalog';
+import { salePrice } from './commerce-tools';
 export async function getCart(country = 'PH', delivery = 'standard') {
   const id = await cartId();
   const pending = id
@@ -29,7 +30,7 @@ export async function getCart(country = 'PH', delivery = 'standard') {
   let totals;
   try {
     totals = priceOrder(
-      cart?.items.map((i) => ({ price: i.variant.product.price, quantity: i.quantity })) || [],
+      cart?.items.map((i) => ({ price: salePrice(i.variant.product), quantity: i.quantity })) || [],
       country,
       delivery,
       promotion,
@@ -37,7 +38,7 @@ export async function getCart(country = 'PH', delivery = 'standard') {
   } catch (e) {
     promoError = e instanceof Error ? e.message : 'Promotion unavailable';
     totals = priceOrder(
-      cart?.items.map((i) => ({ price: i.variant.product.price, quantity: i.quantity })) || [],
+      cart?.items.map((i) => ({ price: salePrice(i.variant.product), quantity: i.quantity })) || [],
       country,
       delivery,
     );

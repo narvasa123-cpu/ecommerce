@@ -27,6 +27,7 @@ type Product = {
   care: string;
   category: string;
   price: number;
+  salePercent?: number;
   collectionId: string;
   active: boolean;
   featured: boolean;
@@ -70,6 +71,7 @@ export function ProductEditor({
     <AdminForm
       endpoint="product"
       currencies={['price']}
+      numbers={['salePercent']}
       booleans={['active', 'featured']}
       json={['images', 'variants']}
       initial={product ? { id: product.id } : {}}
@@ -122,6 +124,11 @@ export function ProductEditor({
                   <small>
                     PHP at the fixed reference rate. Saved to the nearest base-currency cent.
                   </small>
+                </label>
+                <label className="field">
+                  Automatic discount (%)
+                  <input name="salePercent" type="number" min={0} max={90} step={1} defaultValue={product?.salePercent || 0} required />
+                  <small>Zero means no sale. Sale prices apply automatically before any eligible coupon.</small>
                 </label>
                 <label className="field">
                   Category

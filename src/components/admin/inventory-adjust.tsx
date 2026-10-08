@@ -3,6 +3,7 @@ import { useRef, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { X } from 'lucide-react';
 import { api } from '@/lib/client';
+import { rememberUndo } from './staff-tools';
 export function InventoryAdjust({
   id,
   name,
@@ -25,11 +26,12 @@ export function InventoryAdjust({
     setBusy(true);
     setError('');
     try {
-      await api('admin/inventory', {
+      const result = await api<{ undoId?: string }>('admin/inventory', {
         variantId: id,
         delta: Number(delta),
         reason: new FormData(e.currentTarget).get('reason'),
       });
+      rememberUndo(result.undoId);
       setSaved(true);
       dialog.current?.close();
       router.refresh();

@@ -13,6 +13,7 @@ import Image from 'next/image';
 import { X, Minus, Plus, ArrowRight, ShoppingBag } from 'lucide-react';
 import { api } from '@/lib/client';
 import { money } from '@/lib/pricing';
+import { salePrice } from '@/lib/commerce-tools';
 import type { getCart } from '@/lib/cart';
 export type CartData = Awaited<ReturnType<typeof getCart>>;
 const StoreContext = createContext<{
@@ -124,7 +125,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
                         {i.variant.product.name}
                       </Link>
                       <p className="small muted">{i.variant.color}</p>
-                      <p>{money(i.variant.product.price)}</p>
+                      <p>{money(salePrice(i.variant.product))}</p>
                       <div className="quantity">
                         <button
                           disabled={busy}

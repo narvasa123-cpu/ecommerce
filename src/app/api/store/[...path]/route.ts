@@ -6,6 +6,10 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { getCart } from '@/lib/cart';
 import { priceOrder } from '@/lib/pricing';
+import { salePrice } from '@/lib/commerce-tools';
+import { customerToolsGet, customerToolsPost } from '@/lib/customer-tools';
+import { priceDropNotifications, saveUndo, undoStaffAction } from '@/lib/staff-tools';
+import { transactionLock } from '@/lib/transaction-lock';
 import {
   HttpError,
   csrfGuard,
@@ -57,6 +61,7 @@ const productSchema = z.object({
   care: z.string().min(5).max(2000),
   category: z.string().min(2).max(100),
   price: z.number().int().min(100).max(10000000),
+  salePercent: z.number().int().min(0).max(90).default(0),
   collectionId: z.string(),
   featured: z.boolean(),
   active: z.boolean(),
@@ -97,6 +102,7 @@ function errorResponse(e: unknown) {
 export async function GET(request: Request, context: Context) {
   try {
     const path = (await context.params).path.join('/');
+    if (path.startsWith('features/')) return NextResponse.json(await customerToolsGet(path, request), { headers: { 'Cache-Control': 'private, no-store' } });
     if (path === 'cart') {
       const u = new URL(request.url);
       return NextResponse.json(
@@ -125,6 +131,17 @@ export async function POST(request: Request, context: Context) {
     if (!body || typeof body !== 'object' || Array.isArray(body))
       throw new HttpError('Expected a request object.');
     const sessionBucket = digest((await cookies()).get('orven_csrf')?.value || '');
+    if (path.startsWith('features/')) {
+      await rateLimit('features:' + sessionBucket, 30);
+      const result = await customerToolsPost(path, body);
+      revalidatePath('/account');
+      return NextResponse.json(result, { headers: { 'Cache-Control': 'private, no-store' } });
+    }
+    if (path === 'admin/undo') {
+      const result = await undoStaffAction(body);
+      revalidatePath('/');
+      return NextResponse.json(result);
+    }
     if (path.startsWith('auth/')) {
       // Persistent aggregate and per-identifier limits. Do not trust client-supplied IP headers.
       await rateLimit('auth:global', 100, 60000);
@@ -254,7 +271,7 @@ export async function POST(request: Request, context: Context) {
               include: { variant: { include: { product: true } } },
             });
             priceOrder(
-              items.map((i) => ({ price: i.variant.product.price, quantity: i.quantity })),
+              items.map((i) => ({ price: salePrice(i.variant.product), quantity: i.quantity })),
               'PH',
               'standard',
               promo,
@@ -396,6 +413,7 @@ export async function POST(request: Request, context: Context) {
     }
     if (path.startsWith('admin/')) {
       const admin = await requireAdmin();
+      let undoId: string | undefined;
       if (path === 'admin/inventory') {
         const data = z
           .object({
@@ -410,6 +428,7 @@ export async function POST(request: Request, context: Context) {
           })
           .parse(body);
         await db.$transaction(async (tx) => {
+          await transactionLock(tx, `inventory:${data.variantId}`);
           const inv = await tx.inventory.findUniqueOrThrow({
             where: { variantId: data.variantId },
           });
@@ -419,7 +438,9 @@ export async function POST(request: Request, context: Context) {
             where: { variantId: data.variantId },
             data: { quantity: { increment: data.delta } },
           });
-          await tx.stockMovement.create({ data });
+          const movement = await tx.stockMovement.create({ data });
+          undoId = (await saveUndo(tx, admin.id, 'INVENTORY', data.variantId,
+            { quantity: inv.quantity }, { quantity: inv.quantity + data.delta, movementId: movement.id })).id;
           await tx.auditLog.create({
             data: {
               actorId: admin.id,
@@ -500,9 +521,16 @@ export async function POST(request: Request, context: Context) {
       } else if (path === 'admin/product') {
         const { id, images, variants, ...data } = productSchema.parse(body);
         await db.$transaction(async (tx) => {
+          if (id) await transactionLock(tx, `product:${id}`);
+          const previous = id ? await tx.product.findUniqueOrThrow({ where: { id } }) : null;
           const p = id
             ? await tx.product.update({ where: { id }, data })
             : await tx.product.create({ data });
+          if (previous && (previous.price !== p.price || previous.salePercent !== p.salePercent)) {
+            undoId = (await saveUndo(tx, admin.id, 'PRODUCT_PRICE', p.id,
+              { price: previous.price, salePercent: previous.salePercent }, { price: p.price, salePercent: p.salePercent })).id;
+            await priceDropNotifications(tx, p, salePrice(previous));
+          }
           await tx.image.deleteMany({ where: { productId: p.id } });
           await tx.image.createMany({
             data: images.map((img, position) => ({ ...img, position, productId: p.id })),
@@ -519,7 +547,9 @@ export async function POST(request: Request, context: Context) {
               });
           }
           await tx.auditLog.create({
-            data: { actorId: admin.id, action: 'PRODUCT_SAVED', entityId: p.id, detail: p.name },
+            data: { actorId: admin.id, action: 'PRODUCT_SAVED', entityId: p.id,
+              detail: JSON.stringify({ name: p.name, before: previous ? { price: previous.price, salePercent: previous.salePercent } : null,
+                after: { price: p.price, salePercent: p.salePercent } }) },
           });
         });
       } else if (path === 'admin/collection') {
@@ -561,7 +591,7 @@ export async function POST(request: Request, context: Context) {
       } else throw new HttpError('Not found.', 404);
       revalidatePath('/');
       revalidatePath('/sitemap.xml');
-      return NextResponse.json({ ok: true });
+      return NextResponse.json({ ok: true, undoId });
     }
     throw new HttpError('Not found.', 404);
   } catch (e) {

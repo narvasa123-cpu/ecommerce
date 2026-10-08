@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { Search, UserRound, ShoppingBag, Menu, X } from 'lucide-react';
+import { Search, UserRound, ShoppingBag, Menu, X, Heart } from 'lucide-react';
 import { useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { useStore } from './store-provider';
@@ -68,6 +68,7 @@ export function Header() {
           ))}
         </nav>
         <div className="header-tools">
+          <Link className="icon-button" href="/account/saved" aria-label="Your wishlist"><Heart size={20} strokeWidth={1.4} /></Link>
           <Link
             prefetch={false}
             className="icon-button"

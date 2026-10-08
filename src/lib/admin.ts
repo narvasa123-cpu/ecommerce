@@ -42,9 +42,11 @@ export function orderWhere({ q, state }: AdminQuery): Prisma.OrderWhereInput {
     ...(q
       ? {
           OR: [
+            { id: { contains: q, mode: 'insensitive' } },
             { number: { contains: q } },
             { email: { contains: q } },
             { user: { name: { contains: q } } },
+            { items: { some: { name: { contains: q, mode: 'insensitive' } } } },
           ],
         }
       : {}),

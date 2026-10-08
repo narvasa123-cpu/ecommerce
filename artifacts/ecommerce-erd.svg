@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="auto" viewBox="0 0 1920 2500" preserveAspectRatio="xMinYMin meet" role="img" aria-labelledby="title desc">
+<title id="title">E-commerce System Entity Relationship Diagram</title>
+<desc id="desc">ERD based on the Prisma schema, showing model fields, primary and foreign keys, and relationship cardinalities.</desc>
+<defs><filter id="shadow" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#15231f" flood-opacity=".10"/></filter></defs>
+<rect width="100%" height="100%" fill="#f3f6f4"/>
+<text x="40" y="56" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="32" font-weight="700" fill="#1e302b">E-commerce System ERD</text>
+<text x="40" y="86" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="15" fill="#586a64">Prisma schema - solid model definitions - PK primary key - FK foreign key - UK unique</text>
+
+<rect x="40" y="112" width="445" height="1810" rx="14" fill="#e9efec" stroke="#d5dfda"/>
+<text x="54" y="145" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="700" letter-spacing="1.1" fill="#315f58">CUSTOMERS &amp; ACCESS</text>
+<g filter="url(#shadow)"><rect x="52" y="176" width="421" height="186" rx="9" fill="#fff" stroke="#d4ddd8"/><rect x="52" y="176" width="421" height="43" rx="9" fill="#315f58"/><rect x="52" y="185" width="421" height="34" fill="#315f58"/></g>
+<text x="68" y="205" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" font-weight="650" fill="#fff">User</text>
+<text x="68" y="246" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">id <tspan fill="#b36d22" font-weight="700">PK</tspan></text>
+<text x="68" y="268" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">email <tspan fill="#b36d22" font-weight="700">UK</tspan></text>
+<text x="68" y="290" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">name</text>
+<text x="68" y="312" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">passwordHash</text>
+<text x="68" y="334" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">role</text>
+<text x="68" y="356" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">createdAt</text>
+<g filter="url(#shadow)"><rect x="52" y="426" width="421" height="120" rx="9" fill="#fff" stroke="#d4ddd8"/><rect x="52" y="426" width="421" height="43" rx="9" fill="#315f58"/><rect x="52" y="435" width="421" height="34" fill="#315f58"/></g>
+<text x="68" y="455" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" font-weight="650" fill="#fff">Session</text>
+<text x="68" y="496" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">id <tspan fill="#b36d22" font-weight="700">PK</tspan></text>
+<text x="68" y="518" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">userId <tspan fill="#b36d22" font-weight="700">FK</tspan></text>
+<text x="68" y="540" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">expiresAt</text>
+<g filter="url(#shadow)"><rect x="52" y="676" width="421" height="120" rx="9" fill="#fff" stroke="#d4ddd8"/><rect x="52" y="676" width="421" height="43" rx="9" fill="#315f58"/><rect x="52" y="685" width="421" height="34" fill="#315f58"/></g>
+<text x="68" y="705" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" font-weight="650" fill="#fff">PasswordReset</text>
+<text x="68" y="746" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">id <tspan fill="#b36d22" font-weight="700">PK</tspan></text>
+<text x="68" y="768" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">userId <tspan fill="#b36d22" font-weight="700">FK</tspan></text>
+<text x="68" y="790" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">expiresAt</text>
+<g filter="url(#shadow)"><rect x="52" y="926" width="421" height="230" rx="9" fill="#fff" stroke="#d4ddd8"/><rect x="52" y="926" width="421" height="43" rx="9" fill="#315f58"/><rect x="52" y="935" width="421" height="34" fill="#315f58"/></g>
+<text x="68" y="955" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" font-weight="650" fill="#fff">Address</text>
+<text x="68" y="996" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">id <tspan fill="#b36d22" font-weight="700">PK</tspan></text>
+<text x="68" y="1018" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">userId <tspan fill="#b36d22" font-weight="700">FK</tspan></text>
+<text x="68" y="1040" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">name</text>
+<text x="68" y="1062" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">line1</text>
+<text x="68" y="1084" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">city</text>
+<text x="68" y="1106" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">region</text>
+<text x="68" y="1128" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">postalCode</text>
+<text x="68" y="1150" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">country</text>
+<g filter="url(#shadow)"><rect x="52" y="1176" width="421" height="208" rx="9" fill="#fff" stroke="#d4ddd8"/><rect x="52" y="1176" width="421" height="43" rx="9" fill="#315f58"/><rect x="52" y="1185" width="421" height="34" fill="#315f58"/></g>
+<text x="68" y="1205" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" font-weight="650" fill="#fff">CustomerNotification</text>
+<text x="68" y="1246" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">id <tspan fill="#b36d22" font-weight="700">PK</tspan></text>
+<text x="68" y="1268" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">userId <tspan fill="#b36d22" font-weight="700">FK</tspan></text>
+<text x="68" y="1290" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">title</text>
+<text x="68" y="1312" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">message</text>
+<text x="68" y="1334" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">href</text>
+<text x="68" y="1356" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">readAt</text>
+<text x="68" y="1378" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">createdAt</text>
+<g filter="url(#shadow)"><rect x="52" y="1426" width="421" height="164" rx="9" fill="#fff" stroke="#d4ddd8"/><rect x="52" y="1426" width="421" height="43" rx="9" fill="#315f58"/><rect x="52" y="1435" width="421" height="34" fill="#315f58"/></g>
+<text x="68" y="1455" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" font-weight="650" fill="#fff">Favorite</text>
+<text x="68" y="1496" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">id <tspan fill="#b36d22" font-weight="700">PK</tspan></text>
+<text x="68" y="1518" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">userId <tspan fill="#b36d22" font-weight="700">FK</tspan></text>
+<text x="68" y="1540" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">productId <tspan fill="#b36d22" font-weight="700">FK</tspan></text>
+<text x="68" y="1562" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">savedPrice</text>
+<text x="68" y="1584" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">createdAt</text>
+<g filter="url(#shadow)"><rect x="52" y="1676" width="421" height="208" rx="9" fill="#fff" stroke="#d4ddd8"/><rect x="52" y="1676" width="421" height="43" rx="9" fill="#315f58"/><rect x="52" y="1685" width="421" height="34" fill="#315f58"/></g>
+<text x="68" y="1705" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" font-weight="650" fill="#fff">Review</text>
+<text x="68" y="1746" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">id <tspan fill="#b36d22" font-weight="700">PK</tspan></text>
+<text x="68" y="1768" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">userId <tspan fill="#b36d22" font-weight="700">FK</tspan></text>
+<text x="68" y="1790" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">productId <tspan fill="#b36d22" font-weight="700">FK</tspan></text>
+<text x="68" y="1812" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">orderId <tspan fill="#b36d22" font-weight="700">FK</tspan></text>
+<text x="68" y="1834" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">rating</text>
+<text x="68" y="1856" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">body</text>
+<text x="68" y="1878" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">createdAt</text>
+<rect x="505" y="112" width="445" height="1810" rx="14" fill="#e9efec" stroke="#d5dfda"/>
+<text x="519" y="145" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="700" letter-spacing="1.1" fill="#78613d">CATALOG &amp; INVENTORY</text>
+<g filter="url(#shadow)"><rect x="517" y="176" width="421" height="164" rx="9" fill="#fff" stroke="#d4ddd8"/><rect x="517" y="176" width="421" height="43" rx="9" fill="#78613d"/><rect x="517" y="185" width="421" height="34" fill="#78613d"/></g>
+<text x="533" y="205" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" font-weight="650" fill="#fff">Collection</text>
+<text x="533" y="246" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">id <tspan fill="#b36d22" font-weight="700">PK</tspan></text>
+<text x="533" y="268" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">slug <tspan fill="#b36d22" font-weight="700">UK</tspan></text>
+<text x="533" y="290" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">name</text>
+<text x="533" y="312" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">description</text>
+<text x="533" y="334" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">image</text>
+<g filter="url(#shadow)"><rect x="517" y="426" width="421" height="252" rx="9" fill="#fff" stroke="#d4ddd8"/><rect x="517" y="426" width="421" height="43" rx="9" fill="#78613d"/><rect x="517" y="435" width="421" height="34" fill="#78613d"/></g>
+<text x="533" y="455" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" font-weight="650" fill="#fff">Product</text>
+<text x="533" y="496" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">id <tspan fill="#b36d22" font-weight="700">PK</tspan></text>
+<text x="533" y="518" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">slug <tspan fill="#b36d22" font-weight="700">UK</tspan></text>
+<text x="533" y="540" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">collectionId <tspan fill="#b36d22" font-weight="700">FK</tspan></text>
+<text x="533" y="562" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">name</text>
+<text x="533" y="584" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">category</text>
+<text x="533" y="606" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">price</text>
+<text x="533" y="628" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">salePercent</text>
+<text x="533" y="650" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">featured</text>
+<text x="533" y="672" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">active</text>
+<g filter="url(#shadow)"><rect x="517" y="676" width="421" height="164" rx="9" fill="#fff" stroke="#d4ddd8"/><rect x="517" y="676" width="421" height="43" rx="9" fill="#78613d"/><rect x="517" y="685" width="421" height="34" fill="#78613d"/></g>
+<text x="533" y="705" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" font-weight="650" fill="#fff">Image</text>
+<text x="533" y="746" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">id <tspan fill="#b36d22" font-weight="700">PK</tspan></text>
+<text x="533" y="768" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">productId <tspan fill="#b36d22" font-weight="700">FK</tspan></text>
+<text x="533" y="790" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">url</text>
+<text x="533" y="812" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">alt</text>
+<text x="533" y="834" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">position</text>
+<g filter="url(#shadow)"><rect x="517" y="926" width="421" height="208" rx="9" fill="#fff" stroke="#d4ddd8"/><rect x="517" y="926" width="421" height="43" rx="9" fill="#78613d"/><rect x="517" y="935" width="421" height="34" fill="#78613d"/></g>
+<text x="533" y="955" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" font-weight="650" fill="#fff">Variant</text>
+<text x="533" y="996" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">id <tspan fill="#b36d22" font-weight="700">PK</tspan></text>
+<text x="533" y="1018" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">productId <tspan fill="#b36d22" font-weight="700">FK</tspan></text>
+<text x="533" y="1040" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">sku <tspan fill="#b36d22" font-weight="700">UK</tspan></text>
+<text x="533" y="1062" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">color</text>
+<text x="533" y="1084" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">colorHex</text>
+<text x="533" y="1106" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">size</text>
+<text x="533" y="1128" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">madeToOrder</text>
+<g filter="url(#shadow)"><rect x="517" y="1176" width="421" height="120" rx="9" fill="#fff" stroke="#d4ddd8"/><rect x="517" y="1176" width="421" height="43" rx="9" fill="#78613d"/><rect x="517" y="1185" width="421" height="34" fill="#78613d"/></g>
+<text x="533" y="1205" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" font-weight="650" fill="#fff">Inventory</text>
+<text x="533" y="1246" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">id <tspan fill="#b36d22" font-weight="700">PK</tspan></text>
+<text x="533" y="1268" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">variantId <tspan fill="#b36d22" font-weight="700">FK</tspan></text>
+<text x="533" y="1290" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">quantity</text>
+<g filter="url(#shadow)"><rect x="517" y="1426" width="421" height="164" rx="9" fill="#fff" stroke="#d4ddd8"/><rect x="517" y="1426" width="421" height="43" rx="9" fill="#78613d"/><rect x="517" y="1435" width="421" height="34" fill="#78613d"/></g>
+<text x="533" y="1455" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" font-weight="650" fill="#fff">StockMovement</text>
+<text x="533" y="1496" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">id <tspan fill="#b36d22" font-weight="700">PK</tspan></text>
+<text x="533" y="1518" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">variantId <tspan fill="#b36d22" font-weight="700">FK</tspan></text>
+<text x="533" y="1540" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">delta</text>
+<text x="533" y="1562" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">reason</text>
+<text x="533" y="1584" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">createdAt</text>
+<g filter="url(#shadow)"><rect x="517" y="1676" width="421" height="252" rx="9" fill="#fff" stroke="#d4ddd8"/><rect x="517" y="1676" width="421" height="43" rx="9" fill="#78613d"/><rect x="517" y="1685" width="421" height="34" fill="#78613d"/></g>
+<text x="533" y="1705" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" font-weight="650" fill="#fff">Promotion</text>
+<text x="533" y="1746" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">id <tspan fill="#b36d22" font-weight="700">PK</tspan></text>
+<text x="533" y="1768" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">code <tspan fill="#b36d22" font-weight="700">UK</tspan></text>
+<text x="533" y="1790" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">kind</text>
+<text x="533" y="1812" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">value</text>
+<text x="533" y="1834" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">minimum</text>
+<text x="533" y="1856" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">expiresAt</text>
+<text x="533" y="1878" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">usageLimit</text>
+<text x="533" y="1900" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">uses</text>
+<text x="533" y="1922" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">active</text>
+<rect x="970" y="112" width="445" height="1810" rx="14" fill="#e9efec" stroke="#d5dfda"/>
+<text x="984" y="145" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="700" letter-spacing="1.1" fill="#3e5b7a">CART &amp; ORDERS</text>
+<g filter="url(#shadow)"><rect x="982" y="176" width="421" height="120" rx="9" fill="#fff" stroke="#d4ddd8"/><rect x="982" y="176" width="421" height="43" rx="9" fill="#3e5b7a"/><rect x="982" y="185" width="421" height="34" fill="#3e5b7a"/></g>
+<text x="998" y="205" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" font-weight="650" fill="#fff">Cart</text>
+<text x="998" y="246" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">id <tspan fill="#b36d22" font-weight="700">PK</tspan></text>
+<text x="998" y="268" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">promotionCode</text>
+<text x="998" y="290" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">updatedAt</text>
+<g filter="url(#shadow)"><rect x="982" y="426" width="421" height="142" rx="9" fill="#fff" stroke="#d4ddd8"/><rect x="982" y="426" width="421" height="43" rx="9" fill="#3e5b7a"/><rect x="982" y="435" width="421" height="34" fill="#3e5b7a"/></g>
+<text x="998" y="455" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" font-weight="650" fill="#fff">CartItem</text>
+<text x="998" y="496" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">id <tspan fill="#b36d22" font-weight="700">PK</tspan></text>
+<text x="998" y="518" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">cartId <tspan fill="#b36d22" font-weight="700">FK</tspan></text>
+<text x="998" y="540" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">variantId <tspan fill="#b36d22" font-weight="700">FK</tspan></text>
+<text x="998" y="562" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">quantity</text>
+<g filter="url(#shadow)"><rect x="982" y="676" width="421" height="384" rx="9" fill="#fff" stroke="#d4ddd8"/><rect x="982" y="676" width="421" height="43" rx="9" fill="#3e5b7a"/><rect x="982" y="685" width="421" height="34" fill="#3e5b7a"/></g>
+<text x="998" y="705" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" font-weight="650" fill="#fff">Order</text>
+<text x="998" y="746" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">id <tspan fill="#b36d22" font-weight="700">PK</tspan></text>
+<text x="998" y="768" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">number <tspan fill="#b36d22" font-weight="700">UK</tspan></text>
+<text x="998" y="790" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">idempotencyKey <tspan fill="#b36d22" font-weight="700">UK</tspan></text>
+<text x="998" y="812" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">accessToken <tspan fill="#b36d22" font-weight="700">UK</tspan></text>
+<text x="998" y="834" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">cartId</text>
+<text x="998" y="856" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">userId <tspan fill="#b36d22" font-weight="700">FK</tspan></text>
+<text x="998" y="878" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">email</text>
+<text x="998" y="900" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">status</text>
+<text x="998" y="922" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">subtotal</text>
+<text x="998" y="944" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">discount</text>
+<text x="998" y="966" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">shipping</text>
+<text x="998" y="988" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">tax</text>
+<text x="998" y="1010" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">total</text>
+<text x="998" y="1032" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">promotionCode</text>
+<text x="998" y="1054" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">createdAt</text>
+<g filter="url(#shadow)"><rect x="982" y="926" width="421" height="230" rx="9" fill="#fff" stroke="#d4ddd8"/><rect x="982" y="926" width="421" height="43" rx="9" fill="#3e5b7a"/><rect x="982" y="935" width="421" height="34" fill="#3e5b7a"/></g>
+<text x="998" y="955" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" font-weight="650" fill="#fff">OrderItem</text>
+<text x="998" y="996" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">id <tspan fill="#b36d22" font-weight="700">PK</tspan></text>
+<text x="998" y="1018" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">orderId <tspan fill="#b36d22" font-weight="700">FK</tspan></text>
+<text x="998" y="1040" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">variantId</text>
+<text x="998" y="1062" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">name</text>
+<text x="998" y="1084" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">variant</text>
+<text x="998" y="1106" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">image</text>
+<text x="998" y="1128" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">unitPrice</text>
+<text x="998" y="1150" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">quantity</text>
+<g filter="url(#shadow)"><rect x="982" y="1176" width="421" height="186" rx="9" fill="#fff" stroke="#d4ddd8"/><rect x="982" y="1176" width="421" height="43" rx="9" fill="#3e5b7a"/><rect x="982" y="1185" width="421" height="34" fill="#3e5b7a"/></g>
+<text x="998" y="1205" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" font-weight="650" fill="#fff">Payment</text>
+<text x="998" y="1246" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">id <tspan fill="#b36d22" font-weight="700">PK</tspan></text>
+<text x="998" y="1268" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">orderId <tspan fill="#b36d22" font-weight="700">FK</tspan></text>
+<text x="998" y="1290" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">provider</text>
+<text x="998" y="1312" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">providerId <tspan fill="#b36d22" font-weight="700">UK</tspan></text>
+<text x="998" y="1334" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">status</text>
+<text x="998" y="1356" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">amount</text>
+<g filter="url(#shadow)"><rect x="982" y="1426" width="421" height="164" rx="9" fill="#fff" stroke="#d4ddd8"/><rect x="982" y="1426" width="421" height="43" rx="9" fill="#3e5b7a"/><rect x="982" y="1435" width="421" height="34" fill="#3e5b7a"/></g>
+<text x="998" y="1455" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" font-weight="650" fill="#fff">Shipment</text>
+<text x="998" y="1496" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">id <tspan fill="#b36d22" font-weight="700">PK</tspan></text>
+<text x="998" y="1518" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">orderId <tspan fill="#b36d22" font-weight="700">FK</tspan></text>
+<text x="998" y="1540" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">carrier</text>
+<text x="998" y="1562" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">trackingNumber</text>
+<text x="998" y="1584" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">createdAt</text>
+<g filter="url(#shadow)"><rect x="982" y="1676" width="421" height="186" rx="9" fill="#fff" stroke="#d4ddd8"/><rect x="982" y="1676" width="421" height="43" rx="9" fill="#3e5b7a"/><rect x="982" y="1685" width="421" height="34" fill="#3e5b7a"/></g>
+<text x="998" y="1705" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" font-weight="650" fill="#fff">AuditLog</text>
+<text x="998" y="1746" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">id <tspan fill="#b36d22" font-weight="700">PK</tspan></text>
+<text x="998" y="1768" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">actorId</text>
+<text x="998" y="1790" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">action</text>
+<text x="998" y="1812" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">entityId</text>
+<text x="998" y="1834" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">detail</text>
+<text x="998" y="1856" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">createdAt</text>
+<rect x="1435" y="112" width="445" height="1810" rx="14" fill="#e9efec" stroke="#d5dfda"/>
+<text x="1449" y="145" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="14" font-weight="700" letter-spacing="1.1" fill="#786078">STANDALONE RECORDS</text>
+<g filter="url(#shadow)"><rect x="1447" y="176" width="421" height="120" rx="9" fill="#fff" stroke="#d4ddd8"/><rect x="1447" y="176" width="421" height="43" rx="9" fill="#786078"/><rect x="1447" y="185" width="421" height="34" fill="#786078"/></g>
+<text x="1463" y="205" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" font-weight="650" fill="#fff">Newsletter</text>
+<text x="1463" y="246" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">id <tspan fill="#b36d22" font-weight="700">PK</tspan></text>
+<text x="1463" y="268" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">email <tspan fill="#b36d22" font-weight="700">UK</tspan></text>
+<text x="1463" y="290" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">createdAt</text>
+<g filter="url(#shadow)"><rect x="1447" y="426" width="421" height="164" rx="9" fill="#fff" stroke="#d4ddd8"/><rect x="1447" y="426" width="421" height="43" rx="9" fill="#786078"/><rect x="1447" y="435" width="421" height="34" fill="#786078"/></g>
+<text x="1463" y="455" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" font-weight="650" fill="#fff">SupportMessage</text>
+<text x="1463" y="496" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">id <tspan fill="#b36d22" font-weight="700">PK</tspan></text>
+<text x="1463" y="518" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">name</text>
+<text x="1463" y="540" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">email</text>
+<text x="1463" y="562" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">message</text>
+<text x="1463" y="584" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">createdAt</text>
+<g filter="url(#shadow)"><rect x="1447" y="676" width="421" height="120" rx="9" fill="#fff" stroke="#d4ddd8"/><rect x="1447" y="676" width="421" height="43" rx="9" fill="#786078"/><rect x="1447" y="685" width="421" height="34" fill="#786078"/></g>
+<text x="1463" y="705" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" font-weight="650" fill="#fff">RateLimit</text>
+<text x="1463" y="746" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">id <tspan fill="#b36d22" font-weight="700">PK</tspan></text>
+<text x="1463" y="768" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">count</text>
+<text x="1463" y="790" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">resetAt</text>
+<g filter="url(#shadow)"><rect x="1447" y="926" width="421" height="252" rx="9" fill="#fff" stroke="#d4ddd8"/><rect x="1447" y="926" width="421" height="43" rx="9" fill="#786078"/><rect x="1447" y="935" width="421" height="34" fill="#786078"/></g>
+<text x="1463" y="955" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="17" font-weight="650" fill="#fff">UndoAction</text>
+<text x="1463" y="996" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">id <tspan fill="#b36d22" font-weight="700">PK</tspan></text>
+<text x="1463" y="1018" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">actorId</text>
+<text x="1463" y="1040" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">kind</text>
+<text x="1463" y="1062" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">entityId</text>
+<text x="1463" y="1084" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">before</text>
+<text x="1463" y="1106" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">after</text>
+<text x="1463" y="1128" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">expiresAt</text>
+<text x="1463" y="1150" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">usedAt</text>
+<text x="1463" y="1172" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#33443e">createdAt</text>
+<rect x="40" y="1970" width="1840" height="460" rx="14" fill="#fff" stroke="#d4ddd8"/>
+<text x="64" y="2008" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="20" font-weight="700" fill="#1e302b">Declared relationships and cardinality</text>
+<text x="64" y="2033" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" fill="#65766f">Cardinality is shown from the first model to the second; nullable Order.userId permits guest orders.</text>
+<circle cx="70" cy="2064" r="3" fill="#458275"/>
+<text x="82" y="2068" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#2b3c36">User  1  -  0..*  Session  -  has</text>
+<circle cx="70" cy="2095" r="3" fill="#458275"/>
+<text x="82" y="2099" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#2b3c36">User  1  -  0..*  PasswordReset  -  requests</text>
+<circle cx="70" cy="2126" r="3" fill="#458275"/>
+<text x="82" y="2130" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#2b3c36">User  1  -  0..*  Address  -  saves</text>
+<circle cx="70" cy="2157" r="3" fill="#458275"/>
+<text x="82" y="2161" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#2b3c36">User  0..1  -  0..*  Order  -  places</text>
+<circle cx="70" cy="2188" r="3" fill="#458275"/>
+<text x="82" y="2192" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#2b3c36">User  1  -  0..*  Favorite  -  saves</text>
+<circle cx="70" cy="2219" r="3" fill="#458275"/>
+<text x="82" y="2223" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#2b3c36">User  1  -  0..*  Review  -  writes</text>
+<circle cx="70" cy="2250" r="3" fill="#458275"/>
+<text x="82" y="2254" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#2b3c36">User  1  -  0..*  CustomerNotification  -  receives</text>
+<circle cx="70" cy="2281" r="3" fill="#458275"/>
+<text x="82" y="2285" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#2b3c36">Collection  1  -  0..*  Product  -  contains</text>
+<circle cx="70" cy="2312" r="3" fill="#458275"/>
+<text x="82" y="2316" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#2b3c36">Product  1  -  0..*  Image  -  has</text>
+<circle cx="70" cy="2343" r="3" fill="#458275"/>
+<text x="82" y="2347" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#2b3c36">Product  1  -  0..*  Variant  -  offers</text>
+<circle cx="970" cy="2064" r="3" fill="#458275"/>
+<text x="982" y="2068" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#2b3c36">Product  1  -  0..*  Favorite  -  favorited_in</text>
+<circle cx="970" cy="2095" r="3" fill="#458275"/>
+<text x="982" y="2099" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#2b3c36">Product  1  -  0..*  Review  -  reviewed_in</text>
+<circle cx="970" cy="2126" r="3" fill="#458275"/>
+<text x="982" y="2130" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#2b3c36">Variant  1  -  0..1  Inventory  -  tracks</text>
+<circle cx="970" cy="2157" r="3" fill="#458275"/>
+<text x="982" y="2161" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#2b3c36">Variant  1  -  0..*  StockMovement  -  records</text>
+<circle cx="970" cy="2188" r="3" fill="#458275"/>
+<text x="982" y="2192" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#2b3c36">Variant  1  -  0..*  CartItem  -  selected_as</text>
+<circle cx="970" cy="2219" r="3" fill="#458275"/>
+<text x="982" y="2223" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#2b3c36">Cart  1  -  0..*  CartItem  -  contains</text>
+<circle cx="970" cy="2250" r="3" fill="#458275"/>
+<text x="982" y="2254" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#2b3c36">Order  1  -  0..*  OrderItem  -  contains</text>
+<circle cx="970" cy="2281" r="3" fill="#458275"/>
+<text x="982" y="2285" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#2b3c36">Order  1  -  0..1  Payment  -  has</text>
+<circle cx="970" cy="2312" r="3" fill="#458275"/>
+<text x="982" y="2316" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#2b3c36">Order  1  -  0..1  Shipment  -  has</text>
+<circle cx="970" cy="2343" r="3" fill="#458275"/>
+<text x="982" y="2347" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13.5" fill="#2b3c36">Order  1  -  0..*  Review  -  qualifies</text>
+<text x="40" y="2460" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="12.5" fill="#65766f">ID-like fields without declared foreign keys include Order.cartId, OrderItem.variantId, promotionCode fields, and audit actor/entity IDs. See ecommerce-erd.md for details.</text>
+</svg>

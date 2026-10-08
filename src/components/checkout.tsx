@@ -8,6 +8,7 @@ import { useStore, type CartData } from './store-provider';
 import { Totals, PromoForm } from './cart-page';
 import { api } from '@/lib/client';
 import { money } from '@/lib/pricing';
+import { salePrice } from '@/lib/commerce-tools';
 type Address = {
   name: string;
   line1: string;
@@ -445,7 +446,7 @@ export function Checkout({
                     {i.variant.color} · Qty {i.quantity}
                   </p>
                 </div>
-                <span>{money(i.quantity * i.variant.product.price)}</span>
+                <span>{money(i.quantity * salePrice(i.variant.product))}</span>
               </div>
             ))}
           </div>
