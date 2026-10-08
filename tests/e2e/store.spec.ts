@@ -10,12 +10,20 @@ test('responsive storefront, navigation and accessibility', async ({ page }, tes
   );
   mkdirSync('artifacts', { recursive: true });
   // Visit image positions so native lazy loading finishes before the full-page capture.
-  for (const img of await page.locator('main img').all()) await img.scrollIntoViewIfNeeded();
+  for (const img of await page.locator('main img').all()) {
+    if (await img.isVisible()) await img.scrollIntoViewIfNeeded();
+  }
   await expect
     .poll(() =>
       page
         .locator('main img')
-        .evaluateAll((imgs) => imgs.every((img) => (img as HTMLImageElement).complete)),
+        .evaluateAll((imgs) =>
+          imgs.every(
+            (img) =>
+              img.getClientRects().length === 0 ||
+              ((img as HTMLImageElement).complete && (img as HTMLImageElement).naturalWidth > 0),
+          ),
+        ),
     )
     .toBe(true);
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));

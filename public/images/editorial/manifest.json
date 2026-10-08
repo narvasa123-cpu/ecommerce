@@ -1,0 +1,54 @@
+{
+  "generator": "Built-in image_gen",
+  "notice": "AI-generated illustrative editorial concepts for the fictional ORVEN store. Original database product images and product records are preserved. Workshop imagery is a design concept, not a verified manufacturing process.",
+  "assets": [
+    {
+      "file": "hero.webp",
+      "prompt": "Use case: compositing. Asset type: ORVEN website hero photographic background. Recompose the input as a very wide LANDSCAPE 3:1 hero banner. Preserve the exact input cognac handbag silhouette, stitching, handle, leather and brass hardware. Show the entire bag including whole handle and base on the RIGHT HALF, resting on sunlit rustic limestone steps. Bag is entirely within the frame, with a little margin above and below. LEFT HALF is softly lit nearly ivory beige plaster with subtle delicate leaf shadows and ample empty area for website text. Ancient stone steps and warm architecture extend across the scene. Quiet luxury fashion editorial, realistic material texture, warm afternoon sun, ivory and cognac colors. No rendered text, no logos, no watermarks. Save output and report file path.",
+      "reference": "../hero.webp"
+    },
+    {
+      "file": "campaign.webp",
+      "prompt": "Use case: compositing. Asset type: ORVEN editorial website campaign photography, wide landscape 3:1 composition. The input image is product identity reference: preserve this exact cognac handbag silhouette, handle, seams, hardware and leather texture. Create a photorealistic fashion editorial photograph of an adult woman in a loose ivory long-sleeve blouse carrying this bag on her shoulder, photographed waist to neck with face outside frame. She occupies the RIGHT HALF of the wide image. LEFT HALF is empty warm beige plaster wall for website headline. Late-afternoon sunlight and soft leaf shadows, limestone Mediterranean architecture, warm ivory beige cognac espresso palette, filmic natural textures, quiet luxury. The handbag is clearly visible lower right. No rendered text, no watermarks, no new logos. This is illustrative concept campaign imagery. Save the generated image as a file and report the saved path.",
+      "reference": "../hero.webp"
+    },
+    {
+      "file": "everyday.webp",
+      "prompt": "Use case: compositing. Asset type: landscape editorial category photograph for luxury leather goods website. Preserve the EXACT cognac tote in the input reference: its rectangular shape, twin long straps, stitched edges, color and proportions. Place it upright on old limestone steps beside warm beige stucco, deep afternoon leaf shadows, small olive branches at upper right. Bag centered slightly left, full handles visible. Quiet luxury natural photographic realism, warm beige ivory espresso cognac, rich detailed texture. Landscape 3:2 frame. No text, logos, labels or watermarks. Save output and report path.",
+      "reference": "../tote.webp"
+    },
+    {
+      "file": "rituals.webp",
+      "prompt": "Use case: compositing. Asset type: landscape category editorial photograph. Preserve the exact dark chocolate zip-around leather wallet in the input image, its shape, zipper and seams. Arrange this single wallet diagonally on aged sunlit limestone, with soft olive leaf shadows crossing the stone. Warm cognac brown espresso ivory palette, real natural textures, afternoon golden light, quiet luxury fashion still life. Wallet clearly visible and complete. Landscape 3:2 crop. No other merchandise, no text, no logos or watermarks. Save output and report path.",
+      "reference": "../wallet.webp"
+    },
+    {
+      "file": "atelier.webp",
+      "prompt": "Use case: photorealistic-natural. Asset type: ORVEN concept brand-story editorial photograph. A close-up BLACK AND WHITE documentary photograph of adult hands carefully hand-stitching the edge of a leather handbag, focusing on stitches, needle and fine leather grain. No face, no logos, no text, no watermark. Deep black workshop background, soft side light, authentic photographic textures, refined luxury craft composition. Landscape 3:2 crop, hands and stitches centered and visible. This is illustrative concept imagery, not a verified production process. Save output and report path."
+    },
+    {
+      "file": "leather.webp",
+      "prompt": "Use case: product-mockup. Asset type: ORVEN brand-story leather detail image. Extreme macro photograph of rich cognac leather, fine natural grain and gentle curved leather seam near the top. Tiny debossed word ORVEN in elegant classic serif capitals centered in lower middle, impressed into the same brown leather with no gold foil. Warm afternoon side light, dramatic deep espresso shadows at edges, sumptuous realistic material texture. Square 1:1 composition. No other text, no watermark. Illustrative brand concept image. Save output and report path."
+    },
+    {
+      "file": "product-tote.webp",
+      "reference": "../tote.webp",
+      "prompt": "Use case: compositing. Asset type: landscape 4:3 luxury catalog photograph for a website product card. The input is the exact product identity reference. Preserve the complete product's shape, COLOR, straps, handle, seams, stitching, zipper and hardware exactly. Change only the background and camera framing: show the ENTIRE product including its complete handles/straps and base on warm limestone, with a beige plaster wall, soft afternoon sunlight and subtle leaf shadows. The product is centered, occupies about 72% of frame height, with a comfortable margin on every side; absolutely no cropping of the handle or body. Photorealistic restrained editorial style, quiet luxury, natural leather texture. No text, no logos, no watermark. Do not recolor or redesign the product. Save output and report path."
+    },
+    {
+      "file": "product-shoulder.webp",
+      "reference": "../shoulder.webp",
+      "prompt": "Use case: compositing. Asset type: landscape 4:3 luxury catalog photograph for a website product card. The input is the exact product identity reference. Preserve the complete product's shape, COLOR, straps, handle, seams, stitching, zipper and hardware exactly. Change only the background and camera framing: show the ENTIRE product including its complete handles/straps and base on warm limestone, with a beige plaster wall, soft afternoon sunlight and subtle leaf shadows. The product is centered, occupies about 72% of frame height, with a comfortable margin on every side; absolutely no cropping of the handle or body. Photorealistic restrained editorial style, quiet luxury, natural leather texture. No text, no logos, no watermark. Do not recolor or redesign the product. Save output and report path."
+    },
+    {
+      "file": "product-crossbody.webp",
+      "reference": "../crossbody.webp",
+      "prompt": "Use case: compositing. Asset type: landscape 4:3 luxury catalog photograph for a website product card. The input is the exact product identity reference. Preserve the complete product's shape, COLOR, straps, handle, seams, stitching, zipper and hardware exactly. Change only the background and camera framing: show the ENTIRE product including its complete handles/straps and base on warm limestone, with a beige plaster wall, soft afternoon sunlight and subtle leaf shadows. The product is centered, occupies about 72% of frame height, with a comfortable margin on every side; absolutely no cropping of the handle or body. Photorealistic restrained editorial style, quiet luxury, natural leather texture. No text, no logos, no watermark. Do not recolor or redesign the product. Save output and report path."
+    },
+    {
+      "file": "product-wallet.webp",
+      "reference": "../wallet.webp",
+      "prompt": "Use case: compositing. Asset type: landscape 4:3 luxury catalog photograph for a website product card. The input is the exact product identity reference. Preserve the complete product's shape, COLOR, straps, handle, seams, stitching, zipper and hardware exactly. Change only the background and camera framing: show the ENTIRE product including its complete handles/straps and base on warm limestone, with a beige plaster wall, soft afternoon sunlight and subtle leaf shadows. The product is centered, occupies about 72% of frame height, with a comfortable margin on every side; absolutely no cropping of the handle or body. Photorealistic restrained editorial style, quiet luxury, natural leather texture. No text, no logos, no watermark. Do not recolor or redesign the product. Save output and report path."
+    }
+  ]
+}

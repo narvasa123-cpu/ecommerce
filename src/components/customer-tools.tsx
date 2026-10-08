@@ -18,6 +18,7 @@ import {
   Home,
   Search,
   ShoppingBag,
+  Plus,
   Package,
   UserRound,
   RotateCcw,
@@ -149,37 +150,56 @@ export function QuickAdd({
   variantId,
   disabled = false,
   productName,
+  compact = false,
 }: {
   variantId?: string;
   disabled?: boolean;
   productName?: string;
+  compact?: boolean;
 }) {
   const { add } = useStore();
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
   async function addToCart() {
     if (!variantId || disabled) return;
     setBusy(true);
+    setError('');
     try {
       await add(variantId);
+    } catch (error) {
+      setError((error as Error).message);
     } finally {
       setBusy(false);
     }
   }
   return (
-    <button
-      type="button"
-      className="button quick-add"
-      disabled={!variantId || disabled || busy}
-      aria-label={
-        disabled
-          ? `${productName || 'This piece'} is sold out`
-          : `${busy ? 'Adding' : 'Add'} ${productName || 'piece'} to cart`
-      }
-      onClick={addToCart}
-    >
-      <ShoppingBag size={16} aria-hidden="true" />
-      {busy ? 'Adding…' : disabled ? 'Sold out' : 'Add to cart'}
-    </button>
+    <>
+      <button
+        type="button"
+        className={'button quick-add' + (compact ? ' quick-add--compact' : '')}
+        disabled={!variantId || disabled || busy}
+        aria-label={
+          disabled
+            ? `${productName || 'This piece'} is sold out`
+            : `${busy ? 'Adding' : 'Add'} ${productName || 'piece'} to cart`
+        }
+        onClick={addToCart}
+      >
+        {compact ? (
+          <Plus size={17} aria-hidden="true" />
+        ) : (
+          <ShoppingBag size={16} aria-hidden="true" />
+        )}
+        <span className={compact ? 'sr-only' : undefined}>
+          {busy ? 'Adding…' : disabled ? 'Sold out' : 'Add to cart'}
+        </span>
+      </button>
+      {error && (
+        <p className="form-error small quick-add-error" role="alert">
+          {error}
+        </p>
+      )}
+    </>
   );
 }
 export function SearchSuggestions({

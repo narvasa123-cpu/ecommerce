@@ -71,7 +71,11 @@ export function Header() {
           ))}
         </nav>
         <div className="header-tools">
-          <Link className="icon-button" href="/account/saved" aria-label="Your wishlist">
+          <Link
+            className="icon-button wishlist-icon"
+            href="/account/saved"
+            aria-label="Your wishlist"
+          >
             <Heart size={20} strokeWidth={1.4} />
           </Link>
           <Link

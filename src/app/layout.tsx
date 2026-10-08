@@ -3,6 +3,7 @@ import { SiteFrame } from '@/components/site-frame';
 import localFont from 'next/font/local';
 import './globals.css';
 import './customer-tools.css';
+import './homepage.css';
 const displayFont = localFont({
   src: [
     {

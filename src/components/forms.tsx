@@ -1,8 +1,9 @@
 'use client';
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 import { api } from '@/lib/client';
-export function Newsletter() {
+export function Newsletter({ compact = false }: { compact?: boolean }) {
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
@@ -25,7 +26,10 @@ export function Newsletter() {
     }
   }
   return (
-    <form onSubmit={submit} className="newsletter-form">
+    <form
+      onSubmit={submit}
+      className={'newsletter-form' + (compact ? ' newsletter-form--compact' : '')}
+    >
       <label className="sr-only" htmlFor="newsletter-email">
         Email address
       </label>
@@ -40,15 +44,23 @@ export function Newsletter() {
         />
         <button
           type="submit"
-          className="icon-button"
+          className={compact ? 'newsletter-submit' : 'icon-button'}
           aria-label="Subscribe to the newsletter"
           disabled={busy}
         >
-          <ArrowRight size={21} />
+          {compact && <span>{busy ? 'Subscribing…' : 'Subscribe'}</span>}
+          <ArrowRight size={compact ? 14 : 21} aria-hidden="true" />
         </button>
       </div>
       <p className={error ? 'form-error small' : 'small muted'} role="status">
-        {message || 'Collection notes, atelier stories, and little else.'}
+        {message ||
+          (compact ? (
+            <span>
+              By subscribing, you agree to our <Link href="/privacy">Privacy Policy</Link>.
+            </span>
+          ) : (
+            'Collection notes, atelier stories, and little else.'
+          ))}
       </p>
     </form>
   );

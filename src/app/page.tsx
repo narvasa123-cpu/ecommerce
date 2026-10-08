@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, ArrowUpRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { ProductCard } from '@/components/product-card';
 import { getCollections, featuredProducts } from '@/lib/catalog';
 import { db } from '@/lib/db';
@@ -46,18 +46,16 @@ export default async function Home() {
               </Link>
             </div>
           </div>
-          <p className="home-hero-note">ILLUSTRATIVE CONCEPT COLLECTION · PHP</p>
         </div>
         <div className="home-hero-image">
           <Image
-            src="/images/hero.webp"
+            src="/images/editorial/hero.webp"
             alt="AI-generated concept image of a cognac handbag on sunlit limestone"
             fill
             priority
             fetchPriority="high"
-            sizes="(max-width: 760px) 100vw, 64vw"
+            sizes="100vw"
           />
-          <span className="home-image-caption">THE EVERYDAY, CONSIDERED</span>
         </div>
       </section>
 
@@ -73,7 +71,7 @@ export default async function Home() {
         </div>
         {collections.length ? (
           <div className="home-collection-grid">
-            {collections.slice(0, 3).map((collection, index) => (
+            {collections.slice(0, 3).map((collection) => (
               <Link
                 className="home-collection-card"
                 href={'/collections?collection=' + encodeURIComponent(collection.slug)}
@@ -81,18 +79,25 @@ export default async function Home() {
               >
                 <span className="home-collection-image">
                   <Image
-                    src={collection.image || '/images/hero.webp'}
+                    src={
+                      collection.slug === 'the-everyday'
+                        ? '/images/editorial/everyday.webp'
+                        : collection.slug === 'the-city'
+                          ? '/images/editorial/campaign.webp'
+                          : collection.slug === 'small-rituals'
+                            ? '/images/editorial/rituals.webp'
+                            : collection.image || '/images/hero.webp'
+                    }
                     alt={`Illustrative concept image for ${collection.name}`}
                     fill
                     sizes="(max-width: 680px) 100vw, 33vw"
                   />
                 </span>
                 <span className="home-collection-label">
-                  <span className="eyebrow">0{index + 1} / THE COLLECTION</span>
-                  <span className="home-collection-title">
-                    {collection.name} <ArrowUpRight size={19} aria-hidden="true" />
+                  <span className="home-collection-title">{collection.name}</span>
+                  <span className="home-collection-shop">
+                    Shop now <ArrowRight size={13} aria-hidden="true" />
                   </span>
-                  <span className="home-collection-description">{collection.description}</span>
                 </span>
               </Link>
             ))}
@@ -110,17 +115,17 @@ export default async function Home() {
       <section className="home-section home-featured" aria-labelledby="featured-title">
         <div className="home-section-heading">
           <div>
-            <p className="eyebrow">THE SIGNATURE EDIT</p>
+            <p className="eyebrow">FEATURED</p>
             <h2 id="featured-title">Considered essentials.</h2>
           </div>
           <Link className="underlink" href="/collections">
-            View all pieces <ArrowRight size={15} aria-hidden="true" />
+            View all products <ArrowRight size={15} aria-hidden="true" />
           </Link>
         </div>
         {products.length ? (
           <div className="product-grid home-product-grid">
             {products.map((product) => (
-              <ProductCard product={product} key={product.id} />
+              <ProductCard product={product} compact key={product.id} />
             ))}
           </div>
         ) : (
@@ -131,21 +136,16 @@ export default async function Home() {
             </Link>
           </div>
         )}
-        <p className="sample-note align-left home-disclosure">
-          A fictional concept collection. Product details and AI-generated imagery are illustrative;
-          no actual merchandise is offered.
-        </p>
       </section>
 
       <section className="home-campaign" aria-labelledby="campaign-title">
         <Image
-          src="/images/shoulder.webp"
-          alt="AI-generated concept image of an ORVEN-style shoulder bag in warm natural light"
+          src="/images/editorial/campaign.webp"
+          alt="Illustrative campaign of a woman wearing an ivory blouse and carrying a cognac handbag"
           fill
           sizes="100vw"
         />
         <div className="home-campaign-copy">
-          <p className="eyebrow">A STUDY IN MOVEMENT</p>
           <h2 id="campaign-title">Designed to move with you.</h2>
           <p>
             From quiet mornings to unexpected journeys, discover pieces that belong wherever the day
@@ -155,14 +155,13 @@ export default async function Home() {
             Explore the edit <ArrowRight size={16} aria-hidden="true" />
           </Link>
         </div>
-        <span className="home-campaign-note">AI-GENERATED CONCEPT IMAGERY</span>
       </section>
 
       <section className="home-story" aria-labelledby="story-title">
         <div className="home-story-image">
           <Image
-            src="/images/wallet.webp"
-            alt="Illustrative concept image of a leather small good against a warm stone backdrop"
+            src="/images/editorial/atelier.webp"
+            alt="AI-generated illustration of hands stitching leather, a concept design study"
             fill
             sizes="(max-width: 760px) 100vw, 34vw"
           />
@@ -171,8 +170,8 @@ export default async function Home() {
           <p className="eyebrow">OUR STORY</p>
           <h2 id="story-title">The beauty of considered design.</h2>
           <p>
-            Design begins with a quieter question: what earns a place in the things we carry every
-            day? ORVEN is a fictional study in useful forms, warm materials and thoughtful details.
+            Thoughtful proportions, warm materials, and details that make the everyday feel a little
+            more intentional. Explore the ideas behind the ORVEN concept collection.
           </p>
           <Link className="underlink" href="/story">
             Discover our story <ArrowRight size={15} aria-hidden="true" />
@@ -180,12 +179,11 @@ export default async function Home() {
         </div>
         <div className="home-story-detail" aria-label="AI-generated close-up concept image">
           <Image
-            src="/images/crossbody.webp"
-            alt="Illustrative detail of a leather crossbody concept piece"
+            src="/images/editorial/leather.webp"
+            alt="AI-generated concept of the ORVEN wordmark embossed in cognac leather"
             fill
             sizes="(max-width: 760px) 100vw, 28vw"
           />
-          <span>FORM / FUNCTION / FEELING</span>
         </div>
       </section>
     </div>

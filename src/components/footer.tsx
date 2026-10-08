@@ -1,70 +1,81 @@
 import Link from 'next/link';
-import { PackageCheck, RefreshCcw, PenTool } from 'lucide-react';
+import { Truck, Package, ShieldCheck, Leaf, Mail, Heart, UserRound } from 'lucide-react';
 import { Newsletter } from './forms';
 import { Wordmark } from './header';
 import { FREE_STANDARD_SHIPPING_THRESHOLD_LABEL } from '@/lib/pricing';
+
 export function Footer() {
   return (
     <>
-      <div className="service-strip">
-        <div>
-          <PackageCheck strokeWidth={1.2} />
+      <div className="service-strip editorial-services">
+        <Link href="/shipping">
+          <Truck strokeWidth={1.1} />
           <span>
-            Delivery, illustrated
-            <small>Sample free-delivery threshold {FREE_STANDARD_SHIPPING_THRESHOLD_LABEL}</small>
+            Shipping information
+            <small>Sample free shipping over {FREE_STANDARD_SHIPPING_THRESHOLD_LABEL}</small>
           </span>
-        </div>
-        <div>
-          <RefreshCcw strokeWidth={1.2} />
+        </Link>
+        <Link href="/returns">
+          <Package strokeWidth={1.1} />
           <span>
-            Room to decide<small>Proposed 30-day return policy</small>
+            Returns & exchanges<small>Proposed 30-day return policy</small>
           </span>
-        </div>
-        <div>
-          <PenTool strokeWidth={1.2} />
+        </Link>
+        <Link href="/story">
+          <ShieldCheck strokeWidth={1.1} />
           <span>
-            Care, considered<small>Illustrative guidance for sample materials</small>
+            Considered design<small>The ideas behind our collection.</small>
           </span>
-        </div>
+        </Link>
+        <Link href="/care">
+          <Leaf strokeWidth={1.1} />
+          <span>
+            Care for your pieces<small>A little attention, every day.</small>
+          </span>
+        </Link>
       </div>
-      <footer className="footer">
-        <div className="footer-top">
-          <div className="newsletter-copy">
-            <p className="eyebrow">A NOTE FROM ORVEN</p>
-            <h2>Stay a little closer.</h2>
-            <Newsletter />
+      <footer className="footer editorial-footer">
+        <div className="footer-journal">
+          <div>
+            <h2>Join the ORVEN Journal</h2>
+            <p>Be the first to know about new collections and exclusive updates.</p>
           </div>
-          <div className="footer-links">
-            <div>
-              <h3>Explore</h3>
-              <Link href="/collections">All pieces</Link>
-              <Link href="/collections?collection=the-everyday">The Everyday</Link>
-              <Link href="/collections?collection=the-city">The City</Link>
-              <Link href="/story">Our story</Link>
-            </div>
-            <div>
-              <h3>Client care</h3>
-              <Link href="/shipping">Shipping</Link>
-              <Link href="/returns">Returns & exchanges</Link>
-              <Link href="/care">Care guide</Link>
-              <Link href="/contact">Contact us</Link>
-              <Link href="/account">Your account</Link>
-            </div>
+          <Newsletter compact />
+        </div>
+        <div className="footer-main">
+          <Link className="footer-brand" href="/" aria-label="ORVEN home">
+            <Wordmark />
+            <span>The Art of Everyday.</span>
+          </Link>
+          <nav className="footer-navigation" aria-label="Footer navigation">
+            <Link href="/collections">Collections</Link>
+            <Link href="/collections?category=Bags">Bags</Link>
+            <Link href="/collections?category=Small+leather+goods">Small Leather Goods</Link>
+            <Link href="/story">Our Story</Link>
+            <Link href="/contact">Customer Care</Link>
+          </nav>
+          <div className="footer-tools">
+            <Link href="/contact" aria-label="Contact ORVEN">
+              <Mail size={17} />
+            </Link>
+            <Link href="/account/saved" aria-label="Your saved pieces">
+              <Heart size={17} />
+            </Link>
+            <Link href="/account" aria-label="Your account">
+              <UserRound size={17} />
+            </Link>
           </div>
         </div>
-        <div className="footer-bottom">
-          <Link href="/" aria-label="ORVEN home">
-            <Wordmark />
-          </Link>
-          <span>© {new Date().getFullYear()} ORVEN. Designed with intention.</span>
+        <div className="footer-legal">
+          <span>© {new Date().getFullYear()} ORVEN. All rights reserved.</span>
           <div>
-            <Link href="/privacy">Privacy</Link>
-            <Link href="/terms">Terms</Link>
+            <Link href="/privacy">Privacy Policy</Link>
+            <Link href="/terms">Terms of Service</Link>
           </div>
         </div>
         <p className="sample-note">
-          A fictional concept store. All imagery is AI-generated and illustrative. Sandbox payments
-          only; no actual merchandise is offered.
+          Fictional concept store · AI-generated illustrative imagery · Sandbox payments only; no
+          actual merchandise is offered.
         </p>
       </footer>
     </>
