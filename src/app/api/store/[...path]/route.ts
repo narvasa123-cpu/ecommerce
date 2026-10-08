@@ -377,7 +377,17 @@ export async function POST(request: Request, context: Context) {
     if (path === 'account/profile') {
       const user = await requireUser();
       const name = z.string().trim().min(2).max(100).parse(body.name);
-      await db.user.update({ where: { id: user.id }, data: { name } });
+      const phone = z
+        .string()
+        .trim()
+        .max(32)
+        .regex(/^[+()\d\s.-]*$/, 'Use a valid phone number.')
+        .refine((value) => !value || (value.match(/\d/g)?.length ?? 0) >= 7, {
+          message: 'Enter at least 7 digits.',
+        })
+        .transform((value) => value || null)
+        .parse(body.phone ?? '');
+      await db.user.update({ where: { id: user.id }, data: { name, phone } });
       return NextResponse.json({ ok: true });
     }
     if (path === 'account/address') {

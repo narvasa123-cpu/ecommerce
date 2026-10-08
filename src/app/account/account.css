@@ -151,13 +151,80 @@
   font-size: 28px;
   margin-bottom: 10px;
 }
-.account-email {
-  overflow-wrap: anywhere;
-  font-size: 12px;
+.account-email-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 12px;
+  margin: 0 0 20px;
+  border: 1px solid var(--line);
+  background: var(--ivory);
+}
+.account-email-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  color: var(--espresso);
+  background: var(--surface);
+}
+.account-email-info {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.account-email-label {
   color: var(--muted);
-  margin-bottom: 24px;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+}
+.account-email-info strong {
+  overflow-wrap: anywhere;
+  font-size: 11px;
+  font-weight: 500;
+}
+.account-privacy-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.6;
+}
+.account-privacy-note svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--taupe);
+}
+.account-field-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.account-phone-field input {
+  background: var(--ivory);
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+.account-phone-field input:hover {
+  border-color: var(--espresso);
+}
+.account-phone-field input:focus-visible {
+  background: #fffdfa;
+  box-shadow: 0 0 0 3px rgb(168 137 91 / 16%);
+}
+.account-field-hint {
+  max-width: 38ch;
+  line-height: 1.6;
 }
 .customer-account .account-profile .button {
+  width: 100%;
+  justify-content: space-between;
   padding: 14px 16px;
   gap: 12px;
 }
@@ -641,6 +708,9 @@
   .customer-account .account-add-address summary svg,
   .customer-account .account-summary > div,
   .customer-account .order-history > a {
+    transition: none;
+  }
+  .account-phone-field input {
     transition: none;
   }
 }

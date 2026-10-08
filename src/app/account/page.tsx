@@ -5,9 +5,12 @@ import {
   ArrowUpRight,
   CalendarDays,
   ChevronRight,
+  Mail,
   MapPin,
   Package,
+  Phone,
   Plus,
+  ShieldCheck,
   UserRound,
   CircleHelp,
 } from 'lucide-react';
@@ -132,7 +135,15 @@ export default async function Account({
               </div>
             </div>
             <h2 id="details-heading">Personal details</h2>
-            <p className="account-email">{user.email}</p>
+            <div className="account-email-card">
+              <span className="account-email-icon">
+                <Mail size={16} aria-hidden="true" />
+              </span>
+              <span className="account-email-info">
+                <span className="account-email-label">EMAIL ADDRESS</span>
+                <strong>{user.email}</strong>
+              </span>
+            </div>
             <SimpleForm endpoint="account/profile" button="Save your details" refresh>
               <label className="field">
                 Full name
@@ -145,7 +156,29 @@ export default async function Account({
                   maxLength={100}
                 />
               </label>
+              <label className="field account-phone-field">
+                <span className="account-field-label">
+                  <Phone size={14} aria-hidden="true" />
+                  Phone number
+                </span>
+                <input
+                  name="phone"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  defaultValue={user.phone ?? ''}
+                  maxLength={32}
+                  placeholder="+63 912 345 6789"
+                />
+                <small className="account-field-hint">
+                  Optional. Include your country code for international numbers.
+                </small>
+              </label>
             </SimpleForm>
+            <p className="account-privacy-note">
+              <ShieldCheck size={15} aria-hidden="true" />
+              Your contact number is saved with your account details.
+            </p>
             {user.role === 'ADMIN' && (
               <p style={{ marginTop: 25 }}>
                 <Link className="underlink" href="/admin">
