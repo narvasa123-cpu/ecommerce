@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
-import { ProductPrice, SaveProduct } from './customer-tools';
+import { ProductPrice, QuickAdd } from './customer-tools';
 import { availability, type CatalogProduct } from '@/lib/catalog';
 export function ProductCard({ product: p }: { product: CatalogProduct }) {
   const v = p.variants[0];
@@ -51,7 +51,7 @@ export function ProductCard({ product: p }: { product: CatalogProduct }) {
         ))}
         <span className="stock-label">{availability(stock, v?.madeToOrder)}</span>
       </div>
-      <SaveProduct productId={p.id} />
+      <QuickAdd variantId={v?.id} disabled={stock === 0} />
     </article>
   );
 }

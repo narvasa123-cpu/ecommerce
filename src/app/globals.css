@@ -526,6 +526,14 @@ a:hover {
 .product-card > p {
   font-size: 10px;
 }
+.quick-add {
+  width: 100%;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  font-size: 11px;
+}
 .swatches {
   display: flex;
   align-items: center;
