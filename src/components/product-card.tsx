@@ -13,21 +13,13 @@ export function ProductCard({ product: p }: { product: CatalogProduct }) {
       <Link prefetch={false} href={'/products/' + p.slug} className="product-picture">
         <Image
           src={p.images[0]?.url || '/images/tote.webp'}
-          alt={p.images[0]?.alt || 'Illustrative concept sample'}
+          alt={`Illustrative product view of ${p.name}`}
           fill
           sizes="(max-width: 600px) 50vw, (max-width: 1000px) 33vw, 25vw"
         />
-        <span className="product-tag">
-          {stock === 0
-            ? 'Sold out'
-            : v?.madeToOrder
-              ? 'Made to order'
-              : p.featured
-                ? 'THE SIGNATURE EDIT'
-                : 'CONCEPT SAMPLE'}
-        </span>
+        {p.featured && <span className="product-tag">Signature</span>}
         <span className="product-arrow">
-          <ArrowUpRight size={20} />
+          <ArrowUpRight size={20} aria-hidden="true" />
         </span>
       </Link>
       <div className="product-name-price">
@@ -41,7 +33,7 @@ export function ProductCard({ product: p }: { product: CatalogProduct }) {
       <p className="small muted">
         {p.material} · {v?.color}
       </p>
-      <div className="swatches" aria-label={'Available colours for ' + p.name}>
+      <div className="swatches" role="group" aria-label={'Available colours for ' + p.name}>
         {p.variants.map((v) => (
           <span
             key={v.id}
@@ -55,7 +47,7 @@ export function ProductCard({ product: p }: { product: CatalogProduct }) {
           {lowStock || availability(stock, v?.madeToOrder)}
         </span>
       </div>
-      <QuickAdd variantId={v?.id} disabled={stock === 0} />
+      <QuickAdd variantId={v?.id} disabled={stock === 0} productName={p.name} />
     </article>
   );
 }

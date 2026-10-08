@@ -6,6 +6,8 @@ import {
   toPhpMinor,
   fromPhpAmount,
   conversionRounding,
+  FREE_STANDARD_SHIPPING_THRESHOLD,
+  FREE_STANDARD_SHIPPING_THRESHOLD_LABEL,
 } from '../src/lib/pricing';
 const valid = {
   kind: 'PERCENT',
@@ -17,6 +19,11 @@ const valid = {
   usageLimit: 10,
 };
 describe('Server pricing in integer cents', () => {
+  it('formats the displayed free-shipping threshold from the same value used at checkout', () => {
+    expect(FREE_STANDARD_SHIPPING_THRESHOLD).toBe(25000);
+    expect(FREE_STANDARD_SHIPPING_THRESHOLD_LABEL).toBe('₱15,661.75');
+    expect(money(FREE_STANDARD_SHIPPING_THRESHOLD)).toBe(FREE_STANDARD_SHIPPING_THRESHOLD_LABEL);
+  });
   it('converts dollars to pesos rather than relabelling the amount', () => {
     expect(toPhpMinor(20000)).toBe(1252940);
     expect(phpAmount(48500)).toBe('30383.80');

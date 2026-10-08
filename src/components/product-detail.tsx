@@ -6,6 +6,7 @@ import { ArrowRight, ArrowLeft, Plus, X } from 'lucide-react';
 import { useStore } from './store-provider';
 import { ProductPrice, SaveProduct } from './customer-tools';
 import type { CatalogProduct } from '@/lib/catalog';
+import { FREE_STANDARD_SHIPPING_THRESHOLD_LABEL } from '@/lib/pricing';
 function stockLabel(q: number, mto: boolean) {
   return mto
     ? 'Made to order'
@@ -24,7 +25,9 @@ export function ProductDetail({ product: p }: { product: CatalogProduct }) {
   const { add } = useStore();
   const v = p.variants.find((v) => v.id === variantId);
   const quantity = v?.inventory?.quantity || 0;
-  const photos = p.images;
+  const photos = p.images.length
+    ? p.images
+    : [{ id: 'placeholder', url: '/images/tote.webp', alt: `Illustrative view of ${p.name}` }];
   const next = (delta: number) => setIndex((i) => (i + delta + photos.length) % photos.length);
   async function addToBag() {
     if (!v) return;
@@ -42,16 +45,20 @@ export function ProductDetail({ product: p }: { product: CatalogProduct }) {
     <div className="product-layout">
       <div
         className="gallery"
+        role="group"
+        aria-label={`Product images for ${p.name}. Use the arrow keys while an image control is focused to browse.`}
         onKeyDown={(e) => {
-          if (e.key === 'ArrowRight') next(1);
-          if (e.key === 'ArrowLeft') next(-1);
+          if (photos.length > 1 && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
+            e.preventDefault();
+            next(e.key === 'ArrowRight' ? 1 : -1);
+          }
         }}
       >
         <div className="gallery-image">
           <button aria-label="Zoom product image" onClick={() => zoom.current?.showModal()}>
             <Image
               src={photos[index].url}
-              alt={photos[index].alt}
+              alt={`Illustrative view of ${p.name}`}
               fill
               loading="eager"
               fetchPriority="high"
@@ -67,20 +74,20 @@ export function ProductDetail({ product: p }: { product: CatalogProduct }) {
             <button
               key={img.id}
               onClick={() => setIndex(i)}
-              aria-label={'View image ' + (i + 1)}
+              aria-label={`View image ${i + 1} of ${photos.length} for ${p.name}`}
               aria-pressed={index === i}
               className={index === i ? 'active' : ''}
             >
-              <Image src={img.url} alt={img.alt} width={66} height={80} />
+              <Image src={img.url} alt="" width={66} height={80} />
             </button>
           ))}
         </div>
-        <p className="sample-note align-left">
-          AI-generated concept imagery, representative only. Use arrow keys to browse.
+        <p className="sample-note align-left gallery-disclosure">
+          AI-generated product imagery. Use arrow keys while an image control is focused.
         </p>
         <dialog ref={zoom} className="zoom-dialog" aria-label="Enlarged product gallery">
           <div className="row">
-            <p className="small">{p.name} · Concept imagery</p>
+            <p className="small">{p.name} · AI-generated concept image</p>
             <button
               className="icon-button"
               onClick={() => zoom.current?.close()}
@@ -90,7 +97,12 @@ export function ProductDetail({ product: p }: { product: CatalogProduct }) {
             </button>
           </div>
           <div className="zoom-image">
-            <Image src={photos[index].url} alt={photos[index].alt} fill sizes="90vw" />
+            <Image
+              src={photos[index].url}
+              alt={`Illustrative view of ${p.name}`}
+              fill
+              sizes="90vw"
+            />
           </div>
           <div className="zoom-controls">
             <button className="icon-button" onClick={() => next(-1)} aria-label="Previous image">
@@ -106,9 +118,11 @@ export function ProductDetail({ product: p }: { product: CatalogProduct }) {
         </dialog>
       </div>
       <div className="product-details">
-        <p className="eyebrow">{p.collection.name.toUpperCase()} / CONCEPT PIECE</p>
+        <p className="eyebrow">{p.collection.name.toUpperCase()}</p>
         <h1>{p.name}</h1>
-        <div className="product-price"><ProductPrice product={p} /></div>
+        <div className="product-price">
+          <ProductPrice product={p} />
+        </div>
         <SaveProduct productId={p.id} />
         <p className="product-description">{p.description}</p>
         <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
@@ -161,9 +175,10 @@ export function ProductDetail({ product: p }: { product: CatalogProduct }) {
           </p>
         )}
         <p className="product-service">
-          Complimentary standard delivery from ₱15,661.75.
+          Illustrative free standard delivery on orders of {FREE_STANDARD_SHIPPING_THRESHOLD_LABEL}{' '}
+          or more.
           <br />
-          30 days to decide.{' '}
+          Sample 30-day returns policy.{' '}
           <Link className="underlink" href="/shipping">
             Delivery details
           </Link>{' '}
@@ -182,9 +197,9 @@ export function ProductDetail({ product: p }: { product: CatalogProduct }) {
             <p>{copy}</p>
           </details>
         ))}
-        <p className="sample-note align-left">
-          Fictional product. Materials, origin, stock, and craftsmanship are sample data. No actual
-          merchandise or shipments.
+        <p className="sample-note align-left product-disclosure">
+          Fictional sample product. Product details and inventory are illustrative; no merchandise
+          is shipped.
         </p>
       </div>
     </div>

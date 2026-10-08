@@ -75,12 +75,57 @@ test('browse → add to bag → sandbox checkout → confirmation', async ({ pag
 test('collection filters are shareable and keyboard gallery works', async ({ page }) => {
   await page.goto('/collections?category=Totes&sort=price-desc');
   await expect(page.getByRole('combobox', { name: 'Category', exact: true })).toHaveValue('Totes');
+  await expect(
+    page
+      .getByRole('navigation', { name: 'Collections' })
+      .getByRole('link', { name: 'All collections' }),
+  ).toHaveAttribute('aria-current', 'page');
+  await expect(page.getByRole('heading', { name: 'All pieces.', exact: true })).toHaveCount(0);
+  await expect(page.getByText('CONCEPT SAMPLE', { exact: true })).toHaveCount(0);
+  await expect(page.getByRole('img', { name: /concept sample/i })).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+    page.viewportSize()!.width,
+  );
+  const collectionTabs = page.getByRole('navigation', { name: 'Collections' });
+  await collectionTabs.getByRole('link', { name: 'The Everyday' }).click();
+  await expect(page).toHaveURL(
+    /\/collections\?category=Totes&sort=price-desc&collection=the-everyday$/,
+    { timeout: 20000 },
+  );
+  await expect(collectionTabs.getByRole('link', { name: 'The Everyday' })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+  await collectionTabs.getByRole('link', { name: 'All collections' }).click();
+  await expect(page).toHaveURL(/\/collections\?category=Totes&sort=price-desc$/, {
+    timeout: 20000,
+  });
   await page.getByRole('heading', { name: 'The Tall Tote', exact: true }).getByRole('link').click();
+  await expect(page.getByRole('group', { name: /Product images for The Tall Tote/ })).toBeVisible({
+    timeout: 20000,
+  });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+    page.viewportSize()!.width,
+  );
   await page.getByRole('button', { name: 'Zoom product image' }).click();
   await page.keyboard.press('ArrowRight');
   await expect(page.getByRole('dialog').getByText('2 / 2')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).not.toBeVisible();
+});
+test('collection empty state keeps the active count and clears search filters', async ({
+  page,
+}) => {
+  await page.goto('/collections?q=orven-no-matching-piece');
+  await expect(
+    page.getByRole('heading', { name: 'A quieter corner of the collection.' }),
+  ).toBeVisible();
+  await expect(page.locator('.collection-count [role="status"]')).toHaveText('0 pieces');
+  await page
+    .locator('.empty-state')
+    .getByRole('link', { name: 'Clear filters', exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/collections$/, { timeout: 20000 });
 });
 test('admin APIs require role and CSRF checks', async ({ request }) => {
   const noCsrf = await request.post('/api/store/admin/inventory', {

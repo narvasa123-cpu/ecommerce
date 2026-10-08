@@ -3,6 +3,7 @@
 // Source: https://taxcalculator.com.ph/exchange-rates (5 October 2026).
 export const PHP_PER_USD = 62.647;
 export const FX_REFERENCE_DATE = '2026-10-05';
+export const FREE_STANDARD_SHIPPING_THRESHOLD = 25000;
 export const toPhpMinor = (cents: number) => Math.round((cents * 626470) / 10000);
 export const phpAmount = (cents: number) => (toPhpMinor(cents) / 100).toFixed(2);
 export const fromPhpAmount = (pesos: number) => Math.round((pesos * 100) / PHP_PER_USD);
@@ -21,6 +22,7 @@ export const conversionRounding = (totals: {
 export const phpMinorMoney = (centavos: number) =>
   new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(centavos / 100);
 export const money = (cents: number) => phpMinorMoney(toPhpMinor(cents));
+export const FREE_STANDARD_SHIPPING_THRESHOLD_LABEL = money(FREE_STANDARD_SHIPPING_THRESHOLD);
 export type Promo = {
   kind: string;
   value: number;
@@ -77,7 +79,7 @@ export function priceOrder(
         ? ['PH', 'US'].includes(country)
           ? 2500
           : 4000
-        : subtotal - discount >= 25000
+        : subtotal - discount >= FREE_STANDARD_SHIPPING_THRESHOLD
           ? 0
           : ['PH', 'US'].includes(country)
             ? 1200

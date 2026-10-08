@@ -54,13 +54,34 @@ export default async function Collections({
     skip: (page - 1) * 12,
   });
   const current = collections.find((c) => c.slug === query.collection);
+  const hasActiveFilters = Boolean(
+    query.q || query.category || query.collection || query.material || query.max || query.sort,
+  );
+  const filterParams = () => {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(query)) {
+      if (value && key !== 'page' && key !== 'search') params.set(key, value);
+    }
+    return params;
+  };
   function pageLink(p: number) {
-    const u = new URLSearchParams(
-      Object.entries(query).filter((e): e is [string, string] => !!e[1]),
-    );
+    const u = filterParams();
     u.set('page', String(p));
     return '/collections?' + u.toString();
   }
+  function collectionLink(slug?: string) {
+    const u = filterParams();
+    u.delete('collection');
+    if (slug) u.set('collection', slug);
+    const search = u.toString();
+    return '/collections' + (search ? '?' + search : '');
+  }
+  const visiblePageCount = Math.min(5, pages);
+  const firstVisiblePage = Math.min(Math.max(1, page - 2), pages - visiblePageCount + 1);
+  const visiblePages = Array.from(
+    { length: visiblePageCount },
+    (_, index) => firstVisiblePage + index,
+  );
   return (
     <div className="page-container">
       <section className="collection-hero">
@@ -71,9 +92,10 @@ export default async function Collections({
             <span>The collection</span>
           </div>
           <p className="eyebrow">CONSIDERED LEATHER GOODS</p>
-          <h1>The collection.</h1>
+          <h1>{current?.name || 'The collection.'}</h1>
           <p>
-            Purposeful forms. Honest materials. Pieces that feel like yours, from the first day.
+            {current?.description ||
+              'Purposeful forms. Honest materials. Pieces that feel like yours, from the first day.'}
           </p>
         </div>
         <div className="collection-hero-image">
@@ -86,19 +108,20 @@ export default async function Collections({
           />
         </div>
       </section>
-      <div className="page-heading">
-        <h2>{current?.name || 'All pieces.'}</h2>
-        <p>{current?.description || 'A considered edit for every way you move through life.'}</p>
-      </div>
       <nav className="catalog-tabs" aria-label="Collections">
-        <Link href="/collections" className={!query.collection ? 'active' : ''}>
-          All pieces
+        <Link
+          href={collectionLink()}
+          className={!query.collection ? 'active' : ''}
+          aria-current={!query.collection ? 'page' : undefined}
+        >
+          All collections
         </Link>
         {collections.map((c) => (
           <Link
             key={c.id}
-            href={'/collections?collection=' + c.slug}
+            href={collectionLink(c.slug)}
             className={query.collection === c.slug ? 'active' : ''}
+            aria-current={query.collection === c.slug ? 'page' : undefined}
           >
             {c.name}
           </Link>
@@ -145,16 +168,18 @@ export default async function Collections({
           </select>
         </label>
         <button className="button secondary" type="submit">
-          Apply filters <Search size={15} />
+          Show results <Search size={15} />
         </button>
       </form>
       <div className="catalog-count collection-count">
-        <span>
-          {count} considered {count === 1 ? 'piece' : 'pieces'}
+        <span role="status" aria-live="polite">
+          {count} {count === 1 ? 'piece' : 'pieces'}
         </span>
-        <Link className="text-button" href="/collections">
-          Clear filters
-        </Link>
+        {hasActiveFilters && (
+          <Link className="text-button" href="/collections">
+            Clear filters
+          </Link>
+        )}
       </div>
       {products.length ? (
         <div className="product-grid catalog-grid">
@@ -165,27 +190,42 @@ export default async function Collections({
       ) : (
         <div className="empty-state">
           <h2>A quieter corner of the collection.</h2>
-          <p>No pieces match those details. Try a different material or clear the filters.</p>
-          <Link className="button" href="/collections">
-            See all pieces <ArrowRight size={16} />
+          <p>
+            {hasActiveFilters
+              ? 'Try widening your search or removing one of the filters.'
+              : 'There are no pieces to show right now.'}
+          </p>
+          <Link className="button" href={hasActiveFilters ? '/collections' : '/'}>
+            {hasActiveFilters ? 'Clear filters' : 'Return to ORVEN'} <ArrowRight size={16} />
           </Link>
         </div>
       )}
       {pages > 1 && (
         <nav className="pagination" aria-label="Collection pages">
-          {Array.from({ length: pages }, (_, i) => (
+          {page > 1 && (
+            <Link className="page-direction" href={pageLink(page - 1)} aria-label="Previous page">
+              Previous
+            </Link>
+          )}
+          {visiblePages.map((pageNumber) => (
             <Link
-              href={pageLink(i + 1)}
-              key={i}
-              className={page === i + 1 ? 'active' : ''}
-              aria-current={page === i + 1 ? 'page' : undefined}
+              href={pageLink(pageNumber)}
+              key={pageNumber}
+              className={'page-number' + (page === pageNumber ? ' active' : '')}
+              aria-label={'Page ' + pageNumber}
+              aria-current={page === pageNumber ? 'page' : undefined}
             >
-              {i + 1}
+              {pageNumber}
             </Link>
           ))}
+          {page < pages && (
+            <Link className="page-direction" href={pageLink(page + 1)} aria-label="Next page">
+              Next
+            </Link>
+          )}
         </nav>
       )}
-      <p className="sample-note">
+      <p className="sample-note catalog-disclosure">
         Fictional concept catalogue · All product imagery is AI-generated and illustrative
       </p>
     </div>

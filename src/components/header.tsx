@@ -4,6 +4,7 @@ import { Search, UserRound, ShoppingBag, Menu, X, Heart } from 'lucide-react';
 import { useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { useStore } from './store-provider';
+import { FREE_STANDARD_SHIPPING_THRESHOLD_LABEL } from '@/lib/pricing';
 export function Wordmark() {
   return (
     <svg viewBox="0 0 200 62" role="img" aria-label="ORVEN" className="wordmark">
@@ -41,7 +42,9 @@ export function Header() {
     <>
       <div className="announcement">
         <span>Considered design. Everyday companions.</span>
-        <span>Complimentary standard delivery on orders of ₱15,661.75 or more</span>
+        <span>
+          Illustrative free delivery on orders of {FREE_STANDARD_SHIPPING_THRESHOLD_LABEL} or more
+        </span>
         <span>PHP · Philippines & international</span>
       </div>
       <header className="header">

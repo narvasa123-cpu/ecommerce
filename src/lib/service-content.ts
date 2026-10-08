@@ -1,3 +1,5 @@
+import { FREE_STANDARD_SHIPPING_THRESHOLD_LABEL } from './pricing';
+
 export const serviceContent: Record<
   string,
   {
@@ -20,7 +22,7 @@ export const serviceContent: Record<
       },
       {
         title: 'At a pace that suits you',
-        text: 'Standard delivery is illustrated as 3–7 working days, with a ₱751.76 PH/US or ₱1,252.94 EU charge. It is complimentary on orders of ₱15,661.75 or more after discounts. Express delivery is illustrated as 1–3 working days, with a ₱1,566.18 PH/US or ₱2,505.88 EU charge. Made-to-order pieces have an additional 4–6 week preparation period.',
+        text: `Standard delivery is illustrated as 3–7 working days, with a ₱751.76 PH/US or ₱1,252.94 EU charge. It is complimentary on orders of ${FREE_STANDARD_SHIPPING_THRESHOLD_LABEL} or more after discounts. Express delivery is illustrated as 1–3 working days, with a ₱1,566.18 PH/US or ₱2,505.88 EU charge. Made-to-order pieces have an additional 4–6 week preparation period.`,
       },
       {
         title: 'A clear total',

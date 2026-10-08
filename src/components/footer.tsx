@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { PackageCheck, RefreshCcw, PenTool } from 'lucide-react';
 import { Newsletter } from './forms';
 import { Wordmark } from './header';
+import { FREE_STANDARD_SHIPPING_THRESHOLD_LABEL } from '@/lib/pricing';
 export function Footer() {
   return (
     <>
@@ -9,19 +10,20 @@ export function Footer() {
         <div>
           <PackageCheck strokeWidth={1.2} />
           <span>
-            Thoughtful delivery<small>Complimentary standard shipping from ₱15,661.75</small>
+            Delivery, illustrated
+            <small>Sample free-delivery threshold {FREE_STANDARD_SHIPPING_THRESHOLD_LABEL}</small>
           </span>
         </div>
         <div>
           <RefreshCcw strokeWidth={1.2} />
           <span>
-            Room to decide<small>Returns within 30 days of arrival</small>
+            Room to decide<small>Proposed 30-day return policy</small>
           </span>
         </div>
         <div>
           <PenTool strokeWidth={1.2} />
           <span>
-            Care that continues<small>Guidance for the years ahead</small>
+            Care, considered<small>Illustrative guidance for sample materials</small>
           </span>
         </div>
       </div>

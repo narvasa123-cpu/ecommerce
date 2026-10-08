@@ -122,9 +122,11 @@ export function SaveProduct({ productId }: { productId: string }) {
 export function QuickAdd({
   variantId,
   disabled = false,
+  productName,
 }: {
   variantId?: string;
   disabled?: boolean;
+  productName?: string;
 }) {
   const { add } = useStore();
   const [busy, setBusy] = useState(false);
@@ -142,6 +144,11 @@ export function QuickAdd({
       type="button"
       className="button quick-add"
       disabled={!variantId || disabled || busy}
+      aria-label={
+        disabled
+          ? `${productName || 'This piece'} is sold out`
+          : `${busy ? 'Adding' : 'Add'} ${productName || 'piece'} to cart`
+      }
       onClick={addToCart}
     >
       <ShoppingBag size={16} aria-hidden="true" />
@@ -205,9 +212,16 @@ export function SearchSuggestions({
       setOpen(false);
     }
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      if (!links.length) return;
       e.preventDefault();
       const index = links.indexOf(document.activeElement as HTMLAnchorElement);
-      links[(index + (e.key === 'ArrowDown' ? 1 : -1) + links.length) % links.length]?.focus();
+      const next =
+        index === -1
+          ? e.key === 'ArrowDown'
+            ? 0
+            : links.length - 1
+          : (index + (e.key === 'ArrowDown' ? 1 : -1) + links.length) % links.length;
+      links[next]?.focus();
     }
   }
   return (
@@ -229,8 +243,8 @@ export function SearchSuggestions({
         autoFocus={autoFocus}
         autoComplete="off"
         placeholder="Find your next everyday companion"
-        aria-expanded={open && q.trim().length >= 2}
         aria-controls="piece-suggestions"
+        aria-describedby={open && q.trim().length >= 2 ? 'piece-suggestion-status' : undefined}
         onFocus={() => setOpen(true)}
         onChange={(e) => {
           setQ(e.target.value);
@@ -241,7 +255,7 @@ export function SearchSuggestions({
       />
       {open && q.trim().length >= 2 && (
         <div className="search-results" id="piece-suggestions">
-          <p role="status" className="small muted">
+          <p id="piece-suggestion-status" role="status" className="small muted">
             {loading
               ? 'Finding pieces…'
               : error ||

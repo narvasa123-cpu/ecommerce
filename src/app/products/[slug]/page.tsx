@@ -90,11 +90,18 @@ export default async function ProductPage({ params }: Props) {
             </div>
             {reviewCount > 0 && averageRating !== null && (
               <div className="review-summary">
-                <span className="review-stars" role="img" aria-label={`Average rating ${averageRating.toFixed(1)} out of 5`}>
-                  {String.fromCharCode(9733).repeat(roundedAverage)}{String.fromCharCode(9734).repeat(5 - roundedAverage)}
+                <span
+                  className="review-stars"
+                  role="img"
+                  aria-label={`Average rating ${averageRating.toFixed(1)} out of 5`}
+                >
+                  {String.fromCharCode(9733).repeat(roundedAverage)}
+                  {String.fromCharCode(9734).repeat(5 - roundedAverage)}
                 </span>
                 <strong>{averageRating.toFixed(1)} / 5</strong>
-                <span className="muted">{reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}</span>
+                <span className="muted">
+                  {reviewCount} {reviewCount === 1 ? 'review' : 'reviews'}
+                </span>
               </div>
             )}
           </div>
@@ -104,11 +111,19 @@ export default async function ProductPage({ params }: Props) {
                 <article className="review-card" key={r.id}>
                   <strong>{r.user.name.split(' ')[0]}</strong>
                   <div className="review-meta">
-                    <span className="review-stars" role="img" aria-label={`${r.rating} out of 5 stars`}>
-                      {String.fromCharCode(9733).repeat(r.rating)}{String.fromCharCode(9734).repeat(5 - r.rating)}
+                    <span
+                      className="review-stars"
+                      role="img"
+                      aria-label={`${r.rating} out of 5 stars`}
+                    >
+                      {String.fromCharCode(9733).repeat(r.rating)}
+                      {String.fromCharCode(9734).repeat(5 - r.rating)}
                     </span>
                     <span>{r.rating}/5</span>
-                    <span className="muted">Verified {r.order.payment?.provider === 'sandbox' ? 'simulated' : 'test'} purchase</span>
+                    <span className="muted">
+                      Verified {r.order.payment?.provider === 'sandbox' ? 'simulated' : 'test'}{' '}
+                      purchase
+                    </span>
                   </div>
                   <p>{r.body}</p>
                   <time dateTime={r.createdAt.toISOString()} className="small muted">
@@ -117,28 +132,34 @@ export default async function ProductPage({ params }: Props) {
                 </article>
               ))}
               {reviewCount > reviews.length && (
-                <p className="small muted">Showing the latest {reviews.length} of {reviewCount} reviews.</p>
+                <p className="small muted">
+                  Showing the latest {reviews.length} of {reviewCount} reviews.
+                </p>
               )}
             </>
           ) : (
-            <p className="muted">No reviews yet. Be the first to share your experience after a delivered purchase.</p>
+            <p className="muted">
+              No reviews yet. Be the first to share your experience after a delivered purchase.
+            </p>
           )}
           <ReviewForm productId={p.id} />
         </section>
       </div>
-      <section className="section" style={{ paddingTop: 0 }}>
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">IN GOOD COMPANY</p>
-            <h2>A few considered companions.</h2>
+      {related.length > 0 && (
+        <section className="section" style={{ paddingTop: 0 }}>
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">IN GOOD COMPANY</p>
+              <h2>A few considered companions.</h2>
+            </div>
           </div>
-        </div>
-        <div className="product-grid">
-          {related.map((r) => (
-            <ProductCard product={r} key={r.id} />
-          ))}
-        </div>
-      </section>
+          <div className="product-grid">
+            {related.map((r) => (
+              <ProductCard product={r} key={r.id} />
+            ))}
+          </div>
+        </section>
+      )}
     </>
   );
 }
