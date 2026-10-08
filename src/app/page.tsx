@@ -1,242 +1,193 @@
+import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { money } from '@/lib/pricing';
 import { ArrowRight, ArrowUpRight } from 'lucide-react';
-const collections = [
-  {
-    slug: 'the-everyday',
-    name: 'The Everyday',
-    image: '/images/tote.webp',
-    copy: 'Room for the daily essentials.',
-  },
-  {
-    slug: 'moving-lightly',
-    name: 'Moving Lightly',
-    image: '/images/shoulder.webp',
-    copy: 'A companion for moving lightly.',
-  },
-  {
-    slug: 'small-pleasures',
-    name: 'Small Pleasures',
-    image: '/images/wallet.webp',
-    copy: 'Small details. Lasting pleasure.',
-  },
-] as const;
-const products = [
-  {
-    slug: 'the-forma-tote',
-    name: 'The Forma Tote',
-    price: money(48500),
-    image: '/images/tote.webp',
-    material: 'Full-grain leather',
-    colour: 'Cognac',
-  },
-  {
-    slug: 'the-arc-shoulder',
-    name: 'The Arc Shoulder',
-    price: money(36500),
-    image: '/images/shoulder.webp',
-    material: 'Pebbled leather',
-    colour: 'Ink',
-  },
-  {
-    slug: 'the-line-crossbody',
-    name: 'The Line Crossbody',
-    price: money(29500),
-    image: '/images/crossbody.webp',
-    material: 'Full-grain leather',
-    colour: 'Cognac',
-  },
-  {
-    slug: 'the-fold-wallet',
-    name: 'The Fold Wallet',
-    price: money(18500),
-    image: '/images/wallet.webp',
-    material: 'Full-grain leather',
-    colour: 'Ink',
-  },
-] as const;
-export default function Home() {
+import { ProductCard } from '@/components/product-card';
+import { getCollections, featuredProducts } from '@/lib/catalog';
+import { db } from '@/lib/db';
+
+export const metadata: Metadata = {
+  title: 'The art of everyday',
+  description:
+    'Explore the ORVEN concept collection: considered bags and small leather goods for the everyday.',
+};
+
+export default async function Home() {
+  const [allCollections, collectionsWithProducts, products] = await Promise.all([
+    getCollections(),
+    db.product.findMany({
+      where: { active: true },
+      select: { collectionId: true },
+      distinct: ['collectionId'],
+    }),
+    featuredProducts(),
+  ]);
+  const activeCollectionIds = new Set(
+    collectionsWithProducts.map((product) => product.collectionId),
+  );
+  const collections = allCollections.filter((collection) => activeCollectionIds.has(collection.id));
+
   return (
-    <>
-      <section className="hero">
-        <div className="hero-copy">
+    <div className="orven-home">
+      <section className="home-hero" aria-labelledby="home-title">
+        <div className="home-hero-copy">
           <div>
-            <p className="eyebrow">
-              <span className="brass-line" /> THE ART OF EVERYDAY
+            <p className="eyebrow">THE ART OF EVERYDAY</p>
+            <h1 id="home-title">Less, but better.</h1>
+            <p className="home-hero-description">
+              Thoughtfully considered pieces for everything life carries.
             </p>
-            <h1>
-              Less, but
-              <br />
-              <em>better.</em>
-            </h1>
-            <p className="hero-description">
-              Thoughtfully made leather goods.
-              <br />
-              For all the ways you move through life.
-            </p>
-            <Link prefetch={false} className="button" href="/collections">
-              Discover the collection <ArrowRight size={17} />
-            </Link>
+            <div className="home-hero-actions">
+              <Link className="button" href="/collections">
+                Explore the collection <ArrowRight size={16} aria-hidden="true" />
+              </Link>
+              <Link className="underlink" href="/story">
+                Discover ORVEN <ArrowRight size={15} aria-hidden="true" />
+              </Link>
+            </div>
           </div>
-          <p className="hero-footnote">DESIGNED WITH INTENTION. CARRIED FOR YEARS.</p>
+          <p className="home-hero-note">ILLUSTRATIVE CONCEPT COLLECTION · PHP</p>
         </div>
-        <div className="hero-image">
+        <div className="home-hero-image">
           <Image
             src="/images/hero.webp"
-            alt="AI-generated concept of a cognac leather bag on limestone in afternoon light"
+            alt="AI-generated concept image of a cognac handbag on sunlit limestone"
             fill
-            loading="eager"
+            priority
             fetchPriority="high"
-            sizes="(max-width: 760px) 100vw, 58vw"
+            sizes="(max-width: 760px) 100vw, 64vw"
           />
-          <div className="hero-caption">
-            <div>
-              <span className="eyebrow">THE AUTUMN EDIT / 01</span>
-              <p>A softer kind of structure.</p>
-            </div>
-            <span className="image-note">CONCEPT CAMPAIGN</span>
-          </div>
+          <span className="home-image-caption">THE EVERYDAY, CONSIDERED</span>
         </div>
       </section>
-      <div className="brand-ribbon">
-        <span>Quiet by design.</span>
-        <span className="ribbon-dot" />
-        <span>Distinctive by nature.</span>
-        <span className="ribbon-dot" />
-        <span>Made for the everyday.</span>
-      </div>
-      <section className="section collections-section">
-        <div className="section-heading">
+
+      <section className="home-section home-collections" aria-labelledby="collections-title">
+        <div className="home-section-heading">
           <div>
-            <p className="eyebrow">A PLACE FOR EVERYTHING</p>
-            <h2>Made to accompany you.</h2>
+            <p className="eyebrow">EXPLORE</p>
+            <h2 id="collections-title">Objects for the everyday.</h2>
           </div>
-          <p>
-            From the first light to the last train.
-            <br />
-            Considered pieces, wherever the day takes you.
-          </p>
-        </div>
-        <div className="collection-grid">
-          {collections.map((c, i) => (
-            <Link
-              prefetch={false}
-              className="collection-card"
-              href={'/collections?collection=' + c.slug}
-              key={c.slug}
-            >
-              <div className="collection-image">
-                <Image
-                  src={c.image}
-                  alt={'Illustrative AI concept for ' + c.name}
-                  fill
-                  sizes="(max-width: 600px) 100vw, 33vw"
-                />
-                <span className="collection-number">0{i + 1}</span>
-              </div>
-              <div className="collection-label">
-                <div>
-                  <h3>{c.name}</h3>
-                  <p>
-                    {
-                      [
-                        'Room for the daily essentials.',
-                        'A companion for moving lightly.',
-                        'Small details. Lasting pleasure.',
-                      ][i]
-                    }
-                  </p>
-                </div>
-                <ArrowUpRight size={23} strokeWidth={1.3} />
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-      <section className="section featured-section">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">THE SIGNATURE EDIT</p>
-            <h2>Familiar, from the first day.</h2>
-          </div>
-          <Link prefetch={false} className="underlink" href="/collections">
-            Explore all pieces <ArrowRight size={16} />
+          <Link className="underlink" href="/collections">
+            View all collections <ArrowRight size={15} aria-hidden="true" />
           </Link>
         </div>
-        <div className="product-grid">
-          {products.map((p) => (
-            <article className="product-card" key={p.slug}>
-              <Link prefetch={false} href={'/products/' + p.slug} className="product-picture">
-                <Image
-                  src={p.image}
-                  alt={'Illustrative concept of ' + p.name}
-                  fill
-                  sizes="(max-width: 600px) 50vw, 25vw"
-                />
-                <span className="product-tag">THE SIGNATURE EDIT</span>
-                <span className="product-arrow">
-                  <ArrowUpRight size={20} />
+        {collections.length ? (
+          <div className="home-collection-grid">
+            {collections.slice(0, 3).map((collection, index) => (
+              <Link
+                className="home-collection-card"
+                href={'/collections?collection=' + encodeURIComponent(collection.slug)}
+                key={collection.id}
+              >
+                <span className="home-collection-image">
+                  <Image
+                    src={collection.image || '/images/hero.webp'}
+                    alt={`Illustrative concept image for ${collection.name}`}
+                    fill
+                    sizes="(max-width: 680px) 100vw, 33vw"
+                  />
+                </span>
+                <span className="home-collection-label">
+                  <span className="eyebrow">0{index + 1} / THE COLLECTION</span>
+                  <span className="home-collection-title">
+                    {collection.name} <ArrowUpRight size={19} aria-hidden="true" />
+                  </span>
+                  <span className="home-collection-description">{collection.description}</span>
                 </span>
               </Link>
-              <div className="product-name-price">
-                <h3>
-                  <Link prefetch={false} href={'/products/' + p.slug}>
-                    {p.name}
-                  </Link>
-                </h3>
-                <span>{p.price}</span>
-              </div>
-              <p className="small muted">
-                {p.material} · {p.colour}
-              </p>
-            </article>
-          ))}
+            ))}
+          </div>
+        ) : (
+          <div className="home-empty-collection">
+            <p>New pieces are being considered.</p>
+            <Link className="underlink" href="/collections">
+              Browse the collection <ArrowRight size={15} aria-hidden="true" />
+            </Link>
+          </div>
+        )}
+      </section>
+
+      <section className="home-section home-featured" aria-labelledby="featured-title">
+        <div className="home-section-heading">
+          <div>
+            <p className="eyebrow">THE SIGNATURE EDIT</p>
+            <h2 id="featured-title">Considered essentials.</h2>
+          </div>
+          <Link className="underlink" href="/collections">
+            View all pieces <ArrowRight size={15} aria-hidden="true" />
+          </Link>
         </div>
-        <p className="sample-note align-left">
-          Illustrative concept pieces · AI-generated sample imagery
+        {products.length ? (
+          <div className="product-grid home-product-grid">
+            {products.map((product) => (
+              <ProductCard product={product} key={product.id} />
+            ))}
+          </div>
+        ) : (
+          <div className="home-empty-collection">
+            <p>There are no featured pieces at the moment.</p>
+            <Link className="underlink" href="/collections">
+              Explore all pieces <ArrowRight size={15} aria-hidden="true" />
+            </Link>
+          </div>
+        )}
+        <p className="sample-note align-left home-disclosure">
+          A fictional concept collection. Product details and AI-generated imagery are illustrative;
+          no actual merchandise is offered.
         </p>
       </section>
-      <section className="story-block">
-        <div className="story-picture">
+
+      <section className="home-campaign" aria-labelledby="campaign-title">
+        <Image
+          src="/images/shoulder.webp"
+          alt="AI-generated concept image of an ORVEN-style shoulder bag in warm natural light"
+          fill
+          sizes="100vw"
+        />
+        <div className="home-campaign-copy">
+          <p className="eyebrow">A STUDY IN MOVEMENT</p>
+          <h2 id="campaign-title">Designed to move with you.</h2>
+          <p>
+            From quiet mornings to unexpected journeys, discover pieces that belong wherever the day
+            takes you.
+          </p>
+          <Link className="button button-light" href="/collections">
+            Explore the edit <ArrowRight size={16} aria-hidden="true" />
+          </Link>
+        </div>
+        <span className="home-campaign-note">AI-GENERATED CONCEPT IMAGERY</span>
+      </section>
+
+      <section className="home-story" aria-labelledby="story-title">
+        <div className="home-story-image">
           <Image
-            src="/images/hero.webp"
-            alt="Illustrative campaign concept: leather, stone and linen in natural light"
+            src="/images/wallet.webp"
+            alt="Illustrative concept image of a leather small good against a warm stone backdrop"
             fill
-            sizes="(max-width: 760px) 100vw, 50vw"
+            sizes="(max-width: 760px) 100vw, 34vw"
           />
         </div>
-        <div className="story-copy">
-          <p className="eyebrow">THE ORVEN APPROACH</p>
-          <h2>
-            Good things
-            <br />
-            take <em>consideration.</em>
-          </h2>
+        <div className="home-story-copy">
+          <p className="eyebrow">OUR STORY</p>
+          <h2 id="story-title">The beauty of considered design.</h2>
           <p>
-            We believe the things you carry should earn their place. Through thoughtful proportions,
-            honest materials, and details that make the everyday feel a little more intentional.
+            Design begins with a quieter question: what earns a place in the things we carry every
+            day? ORVEN is a fictional study in useful forms, warm materials and thoughtful details.
           </p>
-          <p>Fewer pieces. More meaning.</p>
-          <Link prefetch={false} href="/story" className="underlink">
-            A closer look at our story <ArrowRight size={16} />
+          <Link className="underlink" href="/story">
+            Discover our story <ArrowRight size={15} aria-hidden="true" />
           </Link>
-          <span className="story-mark" aria-hidden="true">
-            O.
-          </span>
+        </div>
+        <div className="home-story-detail" aria-label="AI-generated close-up concept image">
+          <Image
+            src="/images/crossbody.webp"
+            alt="Illustrative detail of a leather crossbody concept piece"
+            fill
+            sizes="(max-width: 760px) 100vw, 28vw"
+          />
+          <span>FORM / FUNCTION / FEELING</span>
         </div>
       </section>
-      <section className="closing-note">
-        <p className="eyebrow">OBJECTS FOR A CONSIDERED LIFE</p>
-        <h2>
-          Not for a season.
-          <br />
-          <em>For your everyday.</em>
-        </h2>
-        <Link prefetch={false} className="underlink" href="/collections">
-          Find your companion <ArrowRight size={16} />
-        </Link>
-      </section>
-    </>
+    </div>
   );
 }

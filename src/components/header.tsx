@@ -23,7 +23,7 @@ export function Wordmark() {
   );
 }
 const links = [
-  ['New arrivals', '/collections'],
+  ['Collections', '/collections'],
   ['Bags', '/collections?category=Bags'],
   ['Small leather goods', '/collections?category=Small+leather+goods'],
   ['Our story', '/story'],
