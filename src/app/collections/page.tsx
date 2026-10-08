@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Search, ArrowRight } from 'lucide-react';
 import { db } from '@/lib/db';
@@ -28,8 +29,10 @@ export default async function Collections({
   if (query.material) where.material = query.material;
   const max = Number(query.max);
   if (max > 0 && Number.isFinite(max)) {
-    const matches = await db.$queryRaw<{ id: string }[]>`SELECT "id" FROM "Product" WHERE ROUND("price"::numeric * (100 - "salePercent") / 100) <= ${fromPhpAmount(max)}`;
-    where.id = { in: matches.map(p => p.id) };
+    const matches = await db.$queryRaw<
+      { id: string }[]
+    >`SELECT "id" FROM "Product" WHERE ROUND("price"::numeric * (100 - "salePercent") / 100) <= ${fromPhpAmount(max)}`;
+    where.id = { in: matches.map((p) => p.id) };
   }
   const count = await db.product.count({ where });
   const pages = Math.max(1, Math.ceil(count / 12));
@@ -60,18 +63,32 @@ export default async function Collections({
   }
   return (
     <div className="page-container">
-      <div className="breadcrumb">
-        <Link href="/">Home</Link>
-        <span>/</span>
-        <span>The collection</span>
-      </div>
+      <section className="collection-hero">
+        <div className="collection-hero-copy">
+          <div className="breadcrumb">
+            <Link href="/">Home</Link>
+            <span>/</span>
+            <span>The collection</span>
+          </div>
+          <p className="eyebrow">CONSIDERED LEATHER GOODS</p>
+          <h1>The collection.</h1>
+          <p>
+            Purposeful forms. Honest materials. Pieces that feel like yours, from the first day.
+          </p>
+        </div>
+        <div className="collection-hero-image">
+          <Image
+            src="/images/shoulder.webp"
+            alt="The Arc Shoulder in warm brown leather"
+            fill
+            priority
+            sizes="(max-width: 760px) 100vw, 48vw"
+          />
+        </div>
+      </section>
       <div className="page-heading">
-        <p className="eyebrow">CONSIDERED LEATHER GOODS</p>
-        <h1>{current?.name || 'The collection.'}</h1>
-        <p>
-          {current?.description ||
-            'Purposeful forms. Honest materials. Pieces that feel like yours, from the first day.'}
-        </p>
+        <h2>{current?.name || 'All pieces.'}</h2>
+        <p>{current?.description || 'A considered edit for every way you move through life.'}</p>
       </div>
       <nav className="catalog-tabs" aria-label="Collections">
         <Link href="/collections" className={!query.collection ? 'active' : ''}>
@@ -87,7 +104,7 @@ export default async function Collections({
           </Link>
         ))}
       </nav>
-      <form className="filters" action="/collections">
+      <form className="filters collection-filters" action="/collections">
         {query.collection && <input type="hidden" name="collection" value={query.collection} />}
         <SearchSuggestions initial={query.q} autoFocus={query.search === '1'} />
         <label>
@@ -131,7 +148,7 @@ export default async function Collections({
           Apply filters <Search size={15} />
         </button>
       </form>
-      <div className="catalog-count">
+      <div className="catalog-count collection-count">
         <span>
           {count} considered {count === 1 ? 'piece' : 'pieces'}
         </span>
