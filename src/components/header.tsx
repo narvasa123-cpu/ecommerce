@@ -68,7 +68,9 @@ export function Header() {
           ))}
         </nav>
         <div className="header-tools">
-          <Link className="icon-button" href="/account/saved" aria-label="Your wishlist"><Heart size={20} strokeWidth={1.4} /></Link>
+          <Link className="icon-button" href="/account/saved" aria-label="Your wishlist">
+            <Heart size={20} strokeWidth={1.4} />
+          </Link>
           <Link
             prefetch={false}
             className="icon-button"
@@ -120,6 +122,26 @@ export function Header() {
           </Link>
         </nav>
       </dialog>
+      <nav className="mobile-bottom-nav" aria-label="Quick shopping navigation">
+        <Link href="/" prefetch={false}>
+          <span aria-hidden="true">⌂</span>Home
+        </Link>
+        <Link href="/collections?search=1" prefetch={false}>
+          <Search size={20} />
+          Search
+        </Link>
+        <button type="button" onClick={openBag}>
+          <ShoppingBag size={20} />
+          <span>Cart{count ? ` · ${count}` : ''}</span>
+        </button>
+        <Link href="/account" prefetch={false}>
+          <span aria-hidden="true">◇</span>Orders
+        </Link>
+        <Link href="/account" prefetch={false}>
+          <UserRound size={20} />
+          Account
+        </Link>
+      </nav>
     </>
   );
 }

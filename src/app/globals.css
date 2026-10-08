@@ -279,6 +279,9 @@ a:hover {
   display: flex;
   gap: 4px;
 }
+.mobile-bottom-nav {
+  display: none;
+}
 .bag-trigger {
   width: 59px;
   gap: 8px;
@@ -1981,6 +1984,40 @@ td .underlink {
   .account-grid {
     grid-template-columns: 1fr;
     gap: 35px;
+  }
+  .mobile-bottom-nav {
+    position: fixed;
+    z-index: 20;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    padding: 10px 8px calc(10px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    background: color-mix(in srgb, var(--ivory) 94%, transparent);
+    backdrop-filter: blur(12px);
+  }
+  .mobile-bottom-nav a,
+  .mobile-bottom-nav button {
+    display: flex;
+    min-height: 42px;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border: 0;
+    background: transparent;
+    color: var(--ink);
+    font: 10px var(--orven-sans);
+    flex-direction: column;
+  }
+  .mobile-bottom-nav a:focus-visible,
+  .mobile-bottom-nav button:focus-visible {
+    outline: 2px solid var(--brass);
+    outline-offset: -2px;
+  }
+  .mobile-bottom-nav a[aria-current='page'] {
+    background: var(--surface);
   }
   .account-welcome {
     align-items: start;
