@@ -66,6 +66,11 @@ export function api<T = Record<string, unknown>>(
 }
 
 export async function uploadProductImage(file: File): Promise<{ url: string }> {
+  const maxFileSize = 8 * 1024 * 1024;
+  if (!file.size || file.size > maxFileSize) throw new Error('Choose an image smaller than 8 MB.');
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type))
+    throw new Error('Use a JPEG, PNG, or WebP image.');
+
   const response = await fetch('/api/admin/product-image', {
     method: 'POST',
     headers: { 'x-csrf-token': await getCsrfToken() },
@@ -76,13 +81,25 @@ export async function uploadProductImage(file: File): Promise<{ url: string }> {
     })(),
     cache: 'no-store',
   });
-  const data = (await response.json()) as { url?: string; error?: string };
-  if (!response.ok || !data.url) {
+  const contentType = response.headers.get('content-type')?.toLowerCase() || '';
+  const data = contentType.includes('application/json')
+    ? ((await response.json().catch(() => null)) as { url?: string; error?: string } | null)
+    : null;
+  if (!response.ok || !data?.url) {
     if (response.status === 403) {
       csrfToken = undefined;
       csrfExpires = 0;
     }
-    throw new Error(data.error || 'The image could not be uploaded. Please try again.');
+    const fallback = response.ok
+      ? 'The upload service returned an unexpected response. Refresh the page and try again.'
+      : response.status === 403
+        ? 'Your session needs refreshing. Reload the page and try again.'
+        : response.status === 413
+          ? 'The server rejected this image as too large. Choose a smaller file and try again.'
+          : response.status === 404 || response.status === 405
+            ? 'The image upload service is unavailable. Refresh the page and try again.'
+            : `Image upload failed (HTTP ${response.status}). Check the storage setup and try again.`;
+    throw new Error(data?.error || fallback);
   }
   return { url: data.url };
 }

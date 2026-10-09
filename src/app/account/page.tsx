@@ -35,7 +35,7 @@ export default async function Account({
   const user = await currentUser();
   if (!user)
     return (
-      <div className="page-container">
+      <div className="page-container auth-page-container">
         <AuthForm next={(await searchParams).next} />
       </div>
     );

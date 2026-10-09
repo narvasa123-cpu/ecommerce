@@ -5,7 +5,7 @@ export default async function Page({
   searchParams: Promise<{ token?: string }>;
 }) {
   return (
-    <div className="page-container">
+    <div className="page-container auth-page-container">
       <AuthForm mode="reset" resetToken={(await searchParams).token} />
     </div>
   );
