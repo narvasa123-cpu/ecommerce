@@ -43,10 +43,17 @@ export async function POST(request: Request) {
     if (!type.signature(bytes)) throw new HttpError('The selected file is not a valid image.');
 
     const projectUrl = process.env.SUPABASE_URL?.replace(/\/$/, '');
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!projectUrl || !serviceKey)
+    const secretKey = process.env.SUPABASE_SECRET_KEY;
+    const legacyServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const storageKey = secretKey || legacyServiceKey;
+    if (!projectUrl)
       throw new HttpError(
-        'Product photo uploads need Supabase Storage configured by the administrator.',
+        'Set SUPABASE_URL in the server environment to enable product photo uploads.',
+        503,
+      );
+    if (!storageKey)
+      throw new HttpError(
+        'Set SUPABASE_SECRET_KEY in the server environment to enable product photo uploads.',
         503,
       );
 
@@ -57,8 +64,12 @@ export async function POST(request: Request) {
     const upload = await fetch(`${projectUrl}/storage/v1/object/${bucket}/${objectName}`, {
       method: 'POST',
       headers: {
-        apikey: serviceKey,
-        Authorization: `Bearer ${serviceKey}`,
+        apikey: storageKey,
+        ...(secretKey
+          ? {}
+          : legacyServiceKey
+            ? { Authorization: `Bearer ${legacyServiceKey}` }
+            : {}),
         'Content-Type': file.type,
         'Cache-Control': 'public, max-age=31536000, immutable',
         'x-upsert': 'false',
