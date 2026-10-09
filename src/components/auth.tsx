@@ -26,15 +26,23 @@ export function AuthForm({
     setMessage('');
     try {
       const data = Object.fromEntries(new FormData(e.currentTarget));
-      const r = await api<{ role?: string; message?: string }>('auth/' + tab, {
+      const r = await api<{
+        role?: string;
+        message?: string;
+        confirmationRequired?: boolean;
+      }>('auth/' + tab, {
         ...data,
         token: resetToken,
       });
       if (tab === 'forgot') {
-        setMessage(r.message || 'Check the development mailer for your reset link.');
+        setMessage(
+          r.message || 'If your account exists, a password reset link will arrive shortly.',
+        );
       } else if (tab === 'reset') {
         setMessage('Your password has been updated. You can sign in again.');
         setTab('login');
+      } else if (tab === 'register' && r.confirmationRequired) {
+        setMessage(r.message || 'Check your email for a confirmation link before signing in.');
       } else {
         router.push(next === 'checkout' ? '/checkout' : r.role === 'ADMIN' ? '/admin' : '/account');
         router.refresh();
@@ -157,7 +165,8 @@ export function AuthForm({
         <Link href="/collections">Continue exploring</Link>
       </div>
       <p className="sample-note">
-        Development accounts use fictional details. Reset emails are logged to the server console.
+        New accounts confirm their email through Supabase. Existing ORVEN accounts can continue
+        signing in as usual.
       </p>
     </div>
   );

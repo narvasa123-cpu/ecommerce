@@ -2,10 +2,11 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Plus, ArrowUp, ArrowDown, Trash2 } from 'lucide-react';
+import { Plus, ArrowUp, ArrowDown, Trash2, ImagePlus, LoaderCircle } from 'lucide-react';
 import { AdminForm } from '@/components/admin-form';
 import { Panel } from './ui';
 import { phpAmount, PHP_PER_USD } from '@/lib/pricing';
+import { uploadProductImage } from '@/lib/client';
 type Variant = {
   id?: string;
   sku: string;
@@ -56,6 +57,9 @@ export function ProductEditor({
   const [slug, setSlug] = useState(product?.slug || '');
   const [seoTitle, setSeoTitle] = useState(product?.seoTitle || product?.name || '');
   const [seoDescription, setSeoDescription] = useState(product?.seoDescription || '');
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const [uploadNotice, setUploadNotice] = useState('');
   function photo(index: number, patch: Partial<Photo>) {
     setPhotos(photos.map((p, i) => (i === index ? { ...p, ...patch } : p)));
   }
@@ -66,6 +70,28 @@ export function ProductEditor({
     const next = [...photos];
     [next[index], next[index + direction]] = [next[index + direction], next[index]];
     setPhotos(next);
+  }
+  async function uploadPhoto(file?: File) {
+    if (!file) return;
+    setUploadError('');
+    setUploadNotice('');
+    if (photos.length >= 8) {
+      setUploadError('A product can have up to 8 images. Remove one before uploading another.');
+      return;
+    }
+    setUploading(true);
+    try {
+      const { url } = await uploadProductImage(file);
+      const label = (product?.name || file.name.replace(/\.[^.]+$/, '') || 'Product')
+        .replace(/\s+/g, ' ')
+        .trim();
+      setPhotos((current) => [...current, { url, alt: `${label} product photo` }]);
+      setUploadNotice('Photo uploaded and added to this product. Save the product to publish it.');
+    } catch (error) {
+      setUploadError((error as Error).message);
+    } finally {
+      setUploading(false);
+    }
   }
   return (
     <AdminForm
@@ -127,8 +153,18 @@ export function ProductEditor({
                 </label>
                 <label className="field">
                   Automatic discount (%)
-                  <input name="salePercent" type="number" min={0} max={90} step={1} defaultValue={product?.salePercent || 0} required />
-                  <small>Zero means no sale. Sale prices apply automatically before any eligible coupon.</small>
+                  <input
+                    name="salePercent"
+                    type="number"
+                    min={0}
+                    max={90}
+                    step={1}
+                    defaultValue={product?.salePercent || 0}
+                    required
+                  />
+                  <small>
+                    Zero means no sale. Sale prices apply automatically before any eligible coupon.
+                  </small>
                 </label>
                 <label className="field">
                   Category
@@ -157,7 +193,8 @@ export function ProductEditor({
           >
             <div className="a-panel-body">
               <p className="a-muted">
-                Choose an image from your local media library. The first image is the cover.
+                Choose an image from your media library or upload a product photo. The first image
+                is the cover.
               </p>
               {photos.map((p, i) => (
                 <div className="a-image-editor" key={i}>
@@ -227,9 +264,37 @@ export function ProductEditor({
                 <Plus size={15} aria-hidden="true" />
                 Add image
               </button>
+              <label className="a-btn a-product-upload" aria-busy={uploading}>
+                {uploading ? (
+                  <LoaderCircle size={15} className="a-upload-spinner" aria-hidden="true" />
+                ) : (
+                  <ImagePlus size={15} aria-hidden="true" />
+                )}
+                {uploading ? 'Uploading photo…' : 'Upload a photo'}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  disabled={uploading || photos.length >= 8}
+                  aria-label="Upload a product photo (JPEG, PNG, or WebP, up to 8 MB)"
+                  onChange={(event) => {
+                    void uploadPhoto(event.currentTarget.files?.[0]);
+                    event.currentTarget.value = '';
+                  }}
+                />
+              </label>
+              {uploadError && (
+                <p className="form-error" role="alert">
+                  {uploadError}
+                </p>
+              )}
+              {uploadNotice && (
+                <p className="form-success" role="status">
+                  {uploadNotice}
+                </p>
+              )}
               <p className="a-muted">
-                To expand the library, place image files in public/images. Sample photography is
-                AI-generated.
+                JPEG, PNG, or WebP, up to 8 MB. Uploaded photos are stored in Supabase Storage; save
+                the product to apply them. Sample photography is AI-generated.
               </p>
             </div>
           </Panel>

@@ -13,6 +13,14 @@ services:
         sync: false
       - key: DIRECT_URL
         sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_PRODUCT_IMAGES_BUCKET
+        value: product-images
       - key: APP_URL
         sync: false
       - key: PAYMENT_MODE

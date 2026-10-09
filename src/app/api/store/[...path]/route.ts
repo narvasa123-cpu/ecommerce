@@ -8,6 +8,12 @@ import { db } from '@/lib/db';
 import { getCart } from '@/lib/cart';
 import { priceOrder } from '@/lib/pricing';
 import { salePrice } from '@/lib/commerce-tools';
+import {
+  SupabaseAuthError,
+  supabaseAuth,
+  supabaseAuthRedirect,
+  type SupabaseAuthUser,
+} from '@/lib/supabase-auth';
 import { customerToolsGet, customerToolsPost } from '@/lib/customer-tools';
 import { priceDropNotifications, saveUndo, undoStaffAction } from '@/lib/staff-tools';
 import { transactionLock } from '@/lib/transaction-lock';
@@ -44,9 +50,26 @@ const addressSchema = z.object({
   postalCode: z.string().trim().min(3).max(20),
   country: z.enum(['PH', 'US', 'FR', 'DE', 'NL', 'IE']),
 });
-const localImage = z
-  .string()
-  .regex(/^\/images\/[a-zA-Z0-9_-]+\.(webp|png|jpg|svg)$/, 'Use a local file from /images/.');
+const localImage = z.string().refine((value) => {
+  if (/^\/images\/[a-zA-Z0-9_-]+\.(webp|png|jpg|svg)$/.test(value)) return true;
+  const projectUrl = process.env.SUPABASE_URL;
+  const bucket = process.env.SUPABASE_PRODUCT_IMAGES_BUCKET || 'product-images';
+  if (!projectUrl) return false;
+  try {
+    const imageUrl = new URL(value);
+    const projectOrigin = new URL(projectUrl).origin;
+    return (
+      imageUrl.origin === projectOrigin &&
+      imageUrl.search === '' &&
+      imageUrl.hash === '' &&
+      new RegExp(
+        `^/storage/v1/object/public/${bucket}/products/[a-f0-9-]{36}\\.(jpg|png|webp)$`,
+      ).test(imageUrl.pathname)
+    );
+  } catch {
+    return false;
+  }
+}, 'Use a bundled image or a photo uploaded to Supabase Storage.');
 const productSchema = z.object({
   id: z.string().optional(),
   name: z.string().min(2).max(100),
@@ -156,6 +179,23 @@ export async function POST(request: Request, context: Context) {
     if (path === 'auth/login') {
       const data = z.object({ email: emailSchema, password: z.string().max(128) }).parse(body);
       const user = await db.user.findUnique({ where: { email: data.email } });
+      if (user?.supabaseAuth) {
+        try {
+          const result = await supabaseAuth<{
+            access_token?: string;
+            user?: SupabaseAuthUser;
+          }>('token?grant_type=password', { body: data });
+          if (
+            !result.access_token ||
+            !(result.user?.email_confirmed_at || result.user?.confirmed_at)
+          )
+            throw new Error('Email not confirmed.');
+        } catch {
+          throw new HttpError('The email or password was not recognised. Please try again.', 401);
+        }
+        await createSession(user.id);
+        return NextResponse.json({ ok: true, role: user.role });
+      }
       const valid = await compare(
         data.password,
         user?.passwordHash || '$2b$12$kJhHWNI8cUZOd1KIJOt94eZI8aH6bkMFc4RwtiMAfxRgl1HR.wSyW',
@@ -177,9 +217,59 @@ export async function POST(request: Request, context: Context) {
         throw new HttpError(
           'We could not create this account. Try signing in or resetting your password.',
         );
-      const user = await db.user.create({
-        data: { name: data.name, email: data.email, passwordHash: await hash(data.password, 12) },
+      let result: SupabaseAuthUser;
+      try {
+        result = await supabaseAuth<SupabaseAuthUser>(
+          `signup?redirect_to=${encodeURIComponent(supabaseAuthRedirect('/account/confirm'))}`,
+          { body: { email: data.email, password: data.password, data: { name: data.name } } },
+        );
+      } catch (error) {
+        if (error instanceof SupabaseAuthError && error.status === 503)
+          throw new HttpError(error.message, 503);
+        throw new HttpError(
+          'We could not start email confirmation. Please check your details and try again.',
+          400,
+        );
+      }
+      const registeredUser = result.user || result;
+      if (!registeredUser.id || registeredUser.identities?.length === 0)
+        return NextResponse.json({
+          ok: true,
+          confirmationRequired: true,
+          message: 'If this email can be registered, a confirmation link will arrive shortly.',
+        });
+      return NextResponse.json({
+        ok: true,
+        confirmationRequired: true,
+        message: 'Check your email for a confirmation link before signing in.',
       });
+    }
+    if (path === 'auth/confirm') {
+      const data = z.object({ accessToken: z.string().min(20).max(4096) }).parse(body);
+      let authUser: SupabaseAuthUser;
+      try {
+        authUser = await supabaseAuth<SupabaseAuthUser>('user', { accessToken: data.accessToken });
+      } catch {
+        throw new HttpError(
+          'This confirmation link has expired or is invalid. Please sign up again.',
+          400,
+        );
+      }
+      if (!(authUser.email_confirmed_at || authUser.confirmed_at) || !authUser.email)
+        throw new HttpError('Please confirm your email before signing in.', 400);
+      const email = emailSchema.parse(authUser.email);
+      let user = await db.user.findUnique({ where: { email } });
+      if (user && !user.supabaseAuth)
+        throw new HttpError(
+          'This email already has an ORVEN account. Please sign in instead.',
+          409,
+        );
+      if (!user) {
+        const name = authUser.user_metadata?.name?.trim().slice(0, 100) || email.split('@')[0];
+        user = await db.user.create({
+          data: { name, email, passwordHash: await hash(token(), 12), supabaseAuth: true },
+        });
+      }
       await createSession(user.id);
       return NextResponse.json({ ok: true });
     }
@@ -192,6 +282,20 @@ export async function POST(request: Request, context: Context) {
     if (path === 'auth/forgot') {
       const email = emailSchema.parse(body.email);
       const user = await db.user.findUnique({ where: { email } });
+      if (user?.supabaseAuth) {
+        try {
+          await supabaseAuth(
+            `recover?redirect_to=${encodeURIComponent(supabaseAuthRedirect('/account/recover'))}`,
+            { body: { email } },
+          );
+        } catch (error) {
+          console.warn('Supabase password recovery request failed:', error);
+        }
+        return NextResponse.json({
+          ok: true,
+          message: 'If an account matches this address, a password reset link will arrive shortly.',
+        });
+      }
       const raw = token();
       if (user) {
         await db.passwordReset.create({
@@ -206,6 +310,38 @@ export async function POST(request: Request, context: Context) {
         message:
           'If an account matches this address, a reset link has been sent to the development mailer.',
       });
+    }
+    if (path === 'auth/reset-supabase') {
+      const data = z
+        .object({ accessToken: z.string().min(20).max(4096), password: passwordSchema })
+        .parse(body);
+      let authUser: SupabaseAuthUser;
+      try {
+        authUser = await supabaseAuth<SupabaseAuthUser>('user', { accessToken: data.accessToken });
+      } catch {
+        throw new HttpError('This reset link has expired or is invalid. Request a new one.', 400);
+      }
+      if (!authUser.email)
+        throw new HttpError('This reset link is invalid. Request a new one.', 400);
+      const user = await db.user.findUnique({
+        where: { email: emailSchema.parse(authUser.email) },
+      });
+      if (!user?.supabaseAuth)
+        throw new HttpError('This reset link is invalid. Request a new one.', 400);
+      try {
+        await supabaseAuth('user', {
+          method: 'PUT',
+          accessToken: data.accessToken,
+          body: { password: data.password },
+        });
+      } catch {
+        throw new HttpError('We could not update your password. Request a new reset link.', 400);
+      }
+      await db.$transaction([
+        db.session.deleteMany({ where: { userId: user.id } }),
+        db.passwordReset.deleteMany({ where: { userId: user.id } }),
+      ]);
+      return NextResponse.json({ ok: true });
     }
     if (path === 'auth/reset') {
       const data = z.object({ token: z.string().length(64), password: passwordSchema }).parse(body);

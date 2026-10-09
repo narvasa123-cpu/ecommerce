@@ -1256,6 +1256,32 @@ body:has(.admin-workspace)::-webkit-scrollbar {
   gap: 8px;
   flex-wrap: wrap;
 }
+.a-product-upload {
+  position: relative;
+  overflow: hidden;
+  width: fit-content;
+  cursor: pointer;
+}
+.a-product-upload input[type='file'] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.a-product-upload:focus-within {
+  outline: 2px solid var(--a-accent, #a8895b);
+  outline-offset: 2px;
+}
+.a-upload-spinner {
+  animation: a-upload-spin 1s linear infinite;
+}
+@keyframes a-upload-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 .a-variant-title {
   display: flex;
   align-items: center;
@@ -2055,7 +2081,10 @@ body:has(.admin-workspace)::-webkit-scrollbar {
   color: var(--a-muted);
   font-size: 11px;
   line-height: 1.2;
-  transition: color 160ms ease, background 160ms ease, border-color 160ms ease;
+  transition:
+    color 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease;
 }
 .a-order-quick-filters a:hover {
   border-color: var(--a-text);

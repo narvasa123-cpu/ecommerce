@@ -64,3 +64,25 @@ export function api<T = Record<string, unknown>>(
   pendingReads.set(path, read);
   return read;
 }
+
+export async function uploadProductImage(file: File): Promise<{ url: string }> {
+  const response = await fetch('/api/admin/product-image', {
+    method: 'POST',
+    headers: { 'x-csrf-token': await getCsrfToken() },
+    body: (() => {
+      const form = new FormData();
+      form.set('file', file);
+      return form;
+    })(),
+    cache: 'no-store',
+  });
+  const data = (await response.json()) as { url?: string; error?: string };
+  if (!response.ok || !data.url) {
+    if (response.status === 403) {
+      csrfToken = undefined;
+      csrfExpires = 0;
+    }
+    throw new Error(data.error || 'The image could not be uploaded. Please try again.');
+  }
+  return { url: data.url };
+}

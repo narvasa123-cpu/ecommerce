@@ -83,7 +83,7 @@ export const serviceContent: Record<
       },
       {
         title: 'Purpose and retention',
-        text: 'Information supports account access, the ordering demonstration and support. Development emails, including reset links, are written to server logs. Before launch, define retention periods, legal bases, processors, international transfers and your privacy contact. Remove development data and logs.',
+        text: 'Information supports account access, the ordering demonstration and support. Legacy development reset and order emails are written to server logs; new account confirmation and recovery emails use Supabase Auth. Before launch, define retention periods, legal bases, processors, international transfers and your privacy contact. Remove development data and logs.',
       },
       {
         title: 'Your choices',

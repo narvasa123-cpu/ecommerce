@@ -13,6 +13,7 @@ model User {
  name String
  phone String?
  passwordHash String
+ supabaseAuth Boolean @default(false)
  role String @default("CUSTOMER")
  createdAt DateTime @default(now())
  sessions Session[]
