@@ -217,6 +217,17 @@ export async function POST(request: Request, context: Context) {
         throw new HttpError(
           'We could not create this account. Try signing in or resetting your password.',
         );
+      if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+        const user = await db.user.create({
+          data: {
+            name: data.name,
+            email: data.email,
+            passwordHash: await hash(data.password, 12),
+          },
+        });
+        await createSession(user.id);
+        return NextResponse.json({ ok: true, role: user.role });
+      }
       let result: SupabaseAuthUser;
       try {
         result = await supabaseAuth<SupabaseAuthUser>(
